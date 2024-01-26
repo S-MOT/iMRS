@@ -27,8 +27,7 @@ Route::prefix("test")->controller(testController::class)->group(function () {
 
 
 Route::prefix("check-login")->controller(adminController::class)->group(function () {
-    Route::get("/", "getAll");
-    Route::post("/", "create");
+    Route::post("/", "checkLogin");
     // Route::post("/check-login", "checkLogin");
 });
 
