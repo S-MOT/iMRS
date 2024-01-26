@@ -12,7 +12,7 @@ pTzKCve31mi1GOHotYwfJ0wPiiiFOwIgWMlMS2gVVtsCZkRGWR1ztgl8QINL/GH2
 BV6ZOx0SpOx5/5nV1vQ6tLPH7tyyWMvU6963/FI=
 -----END RSA PRIVATE KEY-----");
 
-// define("PRIVATE_KEY", "Pikachu");
+// define("PRIVATE_KEY", "Pikachu","Satochi");
 
 class JWTUtils
 {

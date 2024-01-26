@@ -28,7 +28,7 @@ Route::prefix("test")->controller(testController::class)->group(function () {
 
 Route::prefix("check-login")->controller(adminController::class)->group(function () {
     Route::post("/", "checkLogin");
-    // Route::post("/check-login", "checkLogin");
+    // Route::post("/", "");
 });
 
 Route::prefix("room")->controller(RoomController::class)->group(function () {
