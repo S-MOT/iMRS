@@ -15,7 +15,7 @@ class RoomController extends BaseController
      }
 
      //TODO [GET] /room/rooms-list
-     public function roomsList()
+     public function roomsList2()
      {
           try {
                $data = DB::table('Rooms')->orderBy('RoomID', 'DESC')->get();
@@ -25,4 +25,3 @@ class RoomController extends BaseController
           }
      }
 }
-          

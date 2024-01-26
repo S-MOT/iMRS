@@ -29,7 +29,7 @@ Route::prefix("admin")->controller(adminController::class)->group(function () {
 });
 
 Route::prefix("room")->controller(RoomController::class)->group(function () {
-    Route::get("/", "roomsList");
+    Route::get("/rooms-list", "roomsList2");
 });
 
 Route::prefix("book")->controller(BookController::class)->group(function () {
