@@ -21,11 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::prefix("test")->controller(testController::class)->group(function () {
-    Route::get("/", "getAll");
-});
-
-
 Route::prefix("check-login")->controller(adminController::class)->group(function () {
     Route::post("/", "checkLogin");
     // Route::post("/", "");
