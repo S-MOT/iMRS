@@ -2,8 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\testController;
 use App\Http\Controllers\adminController;
+use App\Http\Controllers\BookController;
 use App\Http\Controllers\RoomController;
 
 /*
@@ -21,11 +21,22 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::prefix("check-login")->controller(adminController::class)->group(function () {
+Route::prefix("admin")->controller(adminController::class)->group(function () {
     Route::post("/", "checkLogin");
-    // Route::post("/", "");
+    // Route::post("/", "rePassword");
+    // Route::get("/", "getBooksVIP");
+    // Route::post("/", "adminApprovement");
 });
 
 Route::prefix("room")->controller(RoomController::class)->group(function () {
-    Route::get("/rooms-list", "roomsList");
+    Route::get("/", "roomsList");
+});
+
+Route::prefix("book")->controller(BookController::class)->group(function () {
+    // Route::get("/", "add-book");
+    // Route::get("/", "edit-book");
+    // Route::get("/", "cancel-book");
+    // Route::get("/", "get-book");
+    // Route::get("/", "get-book-room-id");
+    // Route::get("/", "get-book-history");
 });
