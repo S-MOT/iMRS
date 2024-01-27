@@ -36,7 +36,7 @@ Route::prefix("book")->controller(BookController::class)->group(function () {
     Route::post("/add-book", "addBook");
     // Route::get("/", "edit-book");
     // Route::get("/", "cancel-book");
-    // Route::get("/", "get-book");
+    Route::get("/get-book/{code}", "getBookByCode");
     // Route::get("/", "get-book-room-id");
-    // Route::get("/", "get-book-history");
+    Route::get("/get-book-history", "get-book-history");
 });
