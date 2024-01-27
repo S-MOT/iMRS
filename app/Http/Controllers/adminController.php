@@ -6,19 +6,22 @@ use App\Http\Libraries\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-
+use App\Http\Libraries\Bcrypt;
 use App\Http\Libraries\JWT\JWTUtils;
 use App\Http\Libraries\JWT\Key;
 
 class  adminController extends Controller
 {
     private $jwtUtils;
+    private $Bcrypt;
 
 
     public function __construct()
     {
         $this->jwtUtils = new JWTUtils();
+        $this->Bcrypt = new Bcrypt(10);
     }
+    
     //TODO [POST] /check-login
     public function checkLogin(Request $request)
     {

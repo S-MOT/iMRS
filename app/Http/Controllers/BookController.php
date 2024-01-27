@@ -86,38 +86,43 @@ class  BookController extends Controller
                 ->where('Status', '=', 'approved')
                 ->get();
 
-            // $reservedList = $this->BookModel->query($sqlBlockReserve, [$RoomID])->getResult();
-            // $arrReserved = array();
-            // $startTimestamp = (new \DateTime($StartDatetime))->getTimestamp();
-            // $endTimestamp = (new \DateTime($EndDatetime))->getTimestamp();
-            // $nowTimestamp = (new \DateTime())->getTimestamp();
+            $reservedList = $this->BookModel->query($sqlBlockReserve, [$request->RoomID])->getResult();
+            $arrReserved = array();
+            $startTimestamp = (new \DateTime($request->StartDatetime))->getTimestamp();
+            $endTimestamp = (new \DateTime($request->EndDatetime))->getTimestamp();
+            $nowTimestamp = (new \DateTime())->getTimestamp();
 
-            // foreach ($reservedList as $reserved) {
-            //     $dbStartTimestamp = (new \DateTime($reserved->StartDatetime))->getTimestamp();
-            //     $dbEndTimestamp = (new \DateTime($reserved->EndDatetime))->getTimestamp();
+            foreach ($reservedList as $reserved) {
+                $dbStartTimestamp = (new \DateTime($reserved->StartDatetime))->getTimestamp();
+                $dbEndTimestamp = (new \DateTime($reserved->EndDatetime))->getTimestamp();
 
-            //         if ($startTimestamp >= $dbStartTimestamp && $startTimestamp < $dbEndTimestamp) {
-            //             array_push($arrReserved, 1);
-            //             break;
-            //        }
-            //        //! Start > E >= End
-            //        if ($endTimestamp > $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp) {
-            //             array_push($arrReserved, 1);
-            //             break;
-            //        }
-            //        //! S <= Start & E >= End
-            //        if ($startTimestamp <= $dbStartTimestamp && $endTimestamp >= $dbEndTimestamp) {
-            //             array_push($arrReserved, 1);
-            //             break;
-            //        }
-            //        //! S >= Start & E <= End
-            //        if ($startTimestamp >= $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp) {
-            //             array_push($arrReserved, 1);
-            //             break;
-            //        }
-            //   }
+                if ($startTimestamp >= $dbStartTimestamp && $startTimestamp < $dbEndTimestamp) {
+                    array_push($arrReserved, 1);
+                    break;
+                }
+                //! Start > E >= End
+                if ($endTimestamp > $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp) {
+                    array_push($arrReserved, 1);
+                    break;
+                }
+                //! S <= Start & E >= End
+                if ($startTimestamp <= $dbStartTimestamp && $endTimestamp >= $dbEndTimestamp) {
+                    array_push($arrReserved, 1);
+                    break;
+                }
+                //! S >= Start & E <= End
+                if ($startTimestamp >= $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp) {
+                    array_push($arrReserved, 1);
+                    break;
+                }
+            }
 
-            //   if (count($arrReserved) !== 0) return $this->response->setJSON(["state" => false, "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้"]);
+            if ($validator->fails()) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
+                ], 400);
+            }
 
             //   //! ./Block Reverse exist
 
