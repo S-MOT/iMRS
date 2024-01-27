@@ -17,9 +17,9 @@ use App\Http\Controllers\RoomController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
 
 Route::prefix("admin")->controller(adminController::class)->group(function () {
     Route::post("/check-login", "checkLogin");
@@ -33,7 +33,7 @@ Route::prefix("room")->controller(RoomController::class)->group(function () {
 });
 
 Route::prefix("book")->controller(BookController::class)->group(function () {
-    // Route::post("/", "add-book");
+    Route::post("/add-book", "addBook");
     // Route::get("/", "edit-book");
     // Route::get("/", "cancel-book");
     // Route::get("/", "get-book");
