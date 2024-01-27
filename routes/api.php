@@ -22,10 +22,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::prefix("admin")->controller(adminController::class)->group(function () {
-    Route::post("/", "checkLogin");
-    // Route::post("/", "rePassword");
-    // Route::get("/", "getBooksVIP");
-    // Route::post("/", "adminApprovement");
+    Route::post("/check-login", "checkLogin");
+    Route::post("/re-password", "rePassword");
+    Route::get("/get-books-vip", "getBooksVIP");
+    Route::post("/admin-approvement", "adminApprovement");
 });
 
 Route::prefix("room")->controller(RoomController::class)->group(function () {
@@ -33,7 +33,7 @@ Route::prefix("room")->controller(RoomController::class)->group(function () {
 });
 
 Route::prefix("book")->controller(BookController::class)->group(function () {
-    // Route::get("/", "add-book");
+    // Route::post("/", "add-book");
     // Route::get("/", "edit-book");
     // Route::get("/", "cancel-book");
     // Route::get("/", "get-book");
