@@ -2,9 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\adminController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomID;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +23,7 @@ use App\Http\Controllers\RoomController;
 //     return $request->user();
 // });
 
-Route::prefix("admin")->controller(adminController::class)->group(function () {
+Route::prefix("admin")->controller(AdminController::class)->group(function () {
     Route::post("/check-login", "checkLogin");
     Route::post("/re-password", "rePassword");
     Route::get("/get-books-vip", "getBooksVIP");
@@ -34,9 +36,10 @@ Route::prefix("room")->controller(RoomController::class)->group(function () {
 
 Route::prefix("book")->controller(BookController::class)->group(function () {
     Route::post("/add-book", "addBook");
-    // Route::get("/", "edit-book");
-    // Route::get("/", "cancel-book");
+    Route::post("/edit-book", "editBook");
+    Route::post("/cancel-book", "cancelBook");
+    Route::get("/get-book", "getBook");
     Route::get("/get-book/{code}", "getBookByCode");
-    // Route::get("/", "get-book-room-id");
-    Route::get("/get-book-history", "get-book-history");
+    Route::get("/get-book-room-id", "getBookByRoomID");
+    Route::get("/get-book-history", "getBookHistory");
 });

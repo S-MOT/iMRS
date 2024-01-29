@@ -21,7 +21,9 @@ class RoomController extends BaseController
                $data = DB::table('Rooms')->orderBy('RoomID', 'DESC')->get();
                return response()->json($data);
           } catch (\Exception $e) {
-               return response()->setStatusCode(500)->json(['error' => $e->getMessage()]);
+               return response()->json([
+                    'error' => $e->getMessage()
+               ], 500);
           }
      }
 }

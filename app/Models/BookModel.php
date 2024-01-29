@@ -7,9 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class BookModel extends Model
 {
      protected $table = 'Booking';
-
      protected $primaryKey = 'BookID';
-
      protected $allowedFields = [
           "RoomID",
           "Name",

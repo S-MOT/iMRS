@@ -10,7 +10,7 @@ use App\Http\Libraries\Bcrypt;
 use App\Http\Libraries\JWT\JWTUtils;
 use App\Http\Libraries\JWT\Key;
 
-class  adminController extends Controller
+class  AdminController extends Controller
 {
     private $jwtUtils;
     private $Bcrypt;
@@ -21,7 +21,7 @@ class  adminController extends Controller
         $this->jwtUtils = new JWTUtils();
         $this->Bcrypt = new Bcrypt(10);
     }
-    
+
     //TODO [POST] /check-login
     public function checkLogin(Request $request)
     {
@@ -38,7 +38,7 @@ class  adminController extends Controller
                     "msg" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
-            $user = DB::table("Accounts1")
+            $user = DB::table("Accounts")
                 ->where("Username", strtolower($request->Username))
                 ->first();
             if (!$user) {
@@ -115,7 +115,7 @@ class  adminController extends Controller
                 ], 400);
             }
 
-            $users = DB::table("Accounts1")->where('AccountID', $jwt->decoded->AccountID)->first();
+            $users = DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->first();
             $isPass = $request->oldPassword === $users->Password;
             if (!$isPass) {
                 return response()->json([
@@ -124,7 +124,7 @@ class  adminController extends Controller
                 ]);
             }
 
-            DB::table("Accounts1")->where('AccountID', $jwt->decoded->AccountID)->update(['Password' => $request->newPassword]);
+            DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->update(['Password' => $request->newPassword]);
 
             return response()->json([
                 "state" => true,
