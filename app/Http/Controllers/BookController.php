@@ -38,7 +38,6 @@ class  BookController extends Controller
         return $query;
     }
     private function getRoomReserved($RoomID, $StartDatetime)
-
     {
         $query = DB::table('Booking')
             ->where('RoomID', '=', $RoomID)
@@ -108,7 +107,31 @@ class  BookController extends Controller
                     array_push($arrReserved, 1);
                     break;
                 }
-            } { //! Line Notify
+            }
+
+            if (count($arrReserved) > 0) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
+                ], 400);
+            }
+
+            //! ./Block Reverse exist
+
+            // $roomInfo = $this->checkRoom($RoomID);
+
+            // Add Booking
+            DB::table("Booking")->insert([
+                "RoomID"          => $request->RoomID,
+                "Name"            => $request->Name,
+                "Code"            => $request->Code,
+                "Company"         => $request->Company,
+                "Tel"             => $request->Tel,
+                "Timestamp"       => now(),
+                "StartDatetime"   => $request->StartDatetime,
+                "EndDatetime"     => $request->EndDatetime,
+                "Purpose"         => $request->Purpose,
+            ]); { //! Line Notify
                 //  $allReserved = $this->getRoomReserved($RoomID, $StartDatetime);
                 //  if ($roomInfo->RoomLevel != 'vip') {
 
@@ -141,25 +164,6 @@ class  BookController extends Controller
                 //  }
             } //! ./Line Notify
 
-            if (count($arrReserved) > 0) {
-                return response()->json([
-                    "state" => false,
-                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
-                ], 400);
-            }
-
-            // Add Booking
-            DB::table("Booking")->insert([
-                "RoomID"          => $request->RoomID,
-                "Name"            => $request->Name,
-                "Code"            => $request->Code,
-                "Company"         => $request->Company,
-                "Tel"             => $request->Tel,
-                "Timestamp"       => now(),
-                "StartDatetime"   => $request->StartDatetime,
-                "EndDatetime"     => $request->EndDatetime,
-                "Purpose"         => $request->Purpose,
-            ]);
 
             return response()->json([
                 "state" => true,
@@ -329,7 +333,7 @@ class  BookController extends Controller
                     "msg" => "รหัสการยืนยันไม่ถูกต้อง"
                 ], 400);
             }
-            
+
             $data = [
                 'Name'    => $Name,
                 'Code'    => $Code,

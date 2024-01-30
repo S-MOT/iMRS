@@ -104,7 +104,7 @@ class Bcrypt
                     $output .= $itoa64[$c1];
                     break;
                }
-
+               
                $c2 = ord($input[$i++]);
                $c1 |= $c2 >> 4;
                $output .= $itoa64[$c1];

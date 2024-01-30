@@ -47,7 +47,7 @@ class  AdminController extends Controller
                     "msg" => "ไม่มีผู้ใช้งานในระบบ",
                 ], 400);
             }
-            $isPass = $user->Password === $request->Password;
+            $isPass = $user->Bcrypt === $request->Password;
             if (!$isPass) {
                 return response()->json([
                     "state" => false,
@@ -186,6 +186,8 @@ class  AdminController extends Controller
     public function adminApprovement(Request $request)
     {
         try {
+            //! Request validation
+            //! Authorize
             $authorize = $request->header("Authorization");
             $jwt = $this->jwtUtils->verifyToken($authorize);
             if (!$jwt->state) return response()->json([
@@ -200,17 +202,23 @@ class  AdminController extends Controller
                     "msg" => "Header[Authorization] ผิดพลาด",
                 ], 400);
 
+
+            //! Token index[1]
+            //! Decode token to payload
             if ($jwt->decoded->Role != 'admin')
                 return response()->setJSON([
                     "state" => false,
                     "msg" => "ไม่มีสิทธิ์การร้องขอข้อมูลนี้"
                 ], 400);
 
+            //! Body
             $rules = [
                 "BookID"        => ["required", "int"],
                 "isApproved"    => ["required", "boolean"],
             ];
 
+
+            //! ./Request validation
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json([
@@ -219,12 +227,58 @@ class  AdminController extends Controller
                 ], 400);
             }
 
-            $bookInfo = DB::table("Booking")
+            $reservedList = DB::table("Booking")
                 ->select('Booking.*', 'Rooms.*')
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
                 ->where('Booking.BookID', '=', $request->BookID)
                 ->where('Rooms.RoomLevel', '=', 'vip')
                 ->first();
+
+
+            //! Block Reserve exist
+
+            $reservedList = DB::table('Booking')
+                ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
+                ->where('RoomID', $request->RoomID)
+                ->where('Action', '!=', 'canceled')
+                ->where('Status', '=', 'approved')
+                ->get();
+            $arrReserved = array();
+            $startTimestamp = (new \DateTime($request->StartDatetime))->getTimestamp();
+            $endTimestamp = (new \DateTime($request->EndDatetime))->getTimestamp();
+
+            foreach ($reservedList as $reserved) {
+                // Check if the properties exist before accessing them
+                $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
+                $dbEndDatetime = isset($reserved->EndDatetime) ? $reserved->EndDatetime : null;
+
+                if ($dbStartDatetime === null || $dbEndDatetime === null) {
+                    // Handle the case where the properties are not present
+                    continue;
+                }
+
+                $dbStartTimestamp = (new \DateTime($dbStartDatetime))->getTimestamp();
+                $dbEndTimestamp = (new \DateTime($dbEndDatetime))->getTimestamp();
+
+                if (
+                    $startTimestamp >= $dbStartTimestamp && $startTimestamp < $dbEndTimestamp
+                    || $endTimestamp > $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
+                    || $startTimestamp <= $dbStartTimestamp && $endTimestamp >= $dbEndTimestamp
+                    || $startTimestamp >= $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
+                ) {
+                    array_push($arrReserved, 1);
+                    break;
+                }
+            }
+
+            if (count($arrReserved) > 0) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
+                ], 400);
+            }
+
+            //! ./Block Reserve exist
 
             $data = [
                 'Action' => $request->isApproved ? "booking" : "canceled",
