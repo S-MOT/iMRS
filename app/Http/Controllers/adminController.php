@@ -259,7 +259,13 @@ class  AdminController extends Controller
             $arrReserved = array();
             $startTimestamp = (new \DateTime($request->StartDatetime))->getTimestamp();
             $endTimestamp = (new \DateTime($request->EndDatetime))->getTimestamp();
-
+            $nowTimestamp = (new \DateTime())->getTimestamp();
+            //! S >= Now
+            if ($nowTimestamp >= $startTimestamp)
+                return response()->setJSON([
+                    "state" => false,
+                    "msg" => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
+                ]);
             foreach ($reservedList as $reserved) {
                 // Check if the properties exist before accessing them
                 $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
@@ -274,9 +280,13 @@ class  AdminController extends Controller
                 $dbEndTimestamp = (new \DateTime($dbEndDatetime))->getTimestamp();
 
                 if (
+                    //! Start >= S > End
                     $startTimestamp >= $dbStartTimestamp && $startTimestamp < $dbEndTimestamp
+                    //! Start > E >= End
                     || $endTimestamp > $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
+                    //! S <= Start & E >= End
                     || $startTimestamp <= $dbStartTimestamp && $endTimestamp >= $dbEndTimestamp
+                    //! S >= Start & E <= End 
                     || $startTimestamp >= $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
                 ) {
                     array_push($arrReserved, 1);
@@ -316,62 +326,62 @@ class  AdminController extends Controller
 
 
     // //TODO [POST] /admin/test-login
-    // public function testlogin(Request $request)
-    // {
-    //     try {
-    //         $rules = [
-    //             "Username" => ["required", "string", "min:1"],
-    //             "Password" => ["required", "string", "min:1"],
-    //         ];
+    public function testlogin(Request $request)
+    {
+        try {
+            $rules = [
+                "Username" => ["required", "string", "min:1"],
+                "Password" => ["required", "string", "min:1"],
+            ];
 
-    //         $validator = Validator::make($request->all(), $rules);
-    //         if ($validator->fails()) {
-    //             return response()->json([
-    //                 "state" => false,
-    //                 "msg" => "การระบุข้อมูลไม่ครบถ้วน",
-    //             ], 400);
-    //         }
-    //         //! Get users information
-    //         //! check user
-    //         $user = DB::table("Accounts")
-    //             ->where("Username", strtolower($request->Username))
-    //             ->first();
-    //         if (!$user) {
-    //             return response()->json([
-    //                 "state" => false,
-    //                 "msg" => "ไม่มีผู้ใช้งานในระบบ",
-    //             ], 400);
-    //         }
-    //         //! check password
-    //         // $isPass = $user->Password == $request->Password;
-    //         $isPass = $user->Bcrypt->verify($Password, $user->Password);
-    //         if (!$isPass) {
-    //             return response()->json([
-    //                 "state" => false,
-    //                 "msg" => "รหัสผ่านไม่ถูกต้อง",
-    //             ]);
-    //         }
-    //         //! Set payload & Encode JWT
-    //         date_default_timezone_set('Asia/Bangkok');
-    //         $now = new \DateTime();
-    //         $payload = [
-    //             'AccountID' => $user->AccountID,
-    //             'Name' => $user->Name,
-    //             'Username' => $user->Username,
-    //             'Role' => $user->Role,
-    //             'iat' => $now->getTimestamp(), //! generate token time
-    //             'exp' => $now->modify('+30 hours')->getTimestamp() //! expire token time
-    //         ];
-    //         $token = $this->jwtUtils->generateToken($payload);
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "การระบุข้อมูลไม่ครบถ้วน",
+                ], 400);
+            }
+            //! Get users information
+            //! check user
+            $user = DB::table("Accounts")
+                ->where("Username", strtolower($request->Username))
+                ->first();
+            if (!$user) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "ไม่มีผู้ใช้งานในระบบ",
+                ], 400);
+            }
+            //! check password
+            $isPass = $user->Password == $request->Password;
+            // $isPass = $user->Bcrypt->verify($Password, $user->Password);
+            if (!$isPass) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "รหัสผ่านไม่ถูกต้อง",
+                ]);
+            }
+            //! Set payload & Encode JWT
+            date_default_timezone_set('Asia/Bangkok');
+            $now = new \DateTime();
+            $payload = [
+                'AccountID' => $user->AccountID,
+                'Name' => $user->Name,
+                'Username' => $user->Username,
+                'Role' => $user->Role,
+                'iat' => $now->getTimestamp(), //! generate token time
+                'exp' => $now->modify('+30 hours')->getTimestamp() //! expire token time
+            ];
+            $token = $this->jwtUtils->generateToken($payload);
 
-    //         return response()->json([
-    //             "state" => true, "msg" => "เข้าสูระบบสำเร็จ", "token" => $token
-    //         ], 201);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             "state" => false,
-    //             "msg" => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
+            return response()->json([
+                "state" => true, "msg" => "เข้าสูระบบสำเร็จ", "token" => $token
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                "state" => false,
+                "msg" => $e->getMessage()
+            ], 500);
+        }
+    }
 }

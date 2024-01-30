@@ -47,8 +47,19 @@ class  BookController extends Controller
             ->first();
         return $query;
     }
-    private function checkEditCode()
+    private function checkEditCode($BookID, $Code)
     {
+        // $data = DB::table('Booking')
+        //     ->where('BookID', '=', $BookID)
+        //     ->where('Code', '=', $Code)
+        //     ->get();
+        // return count($data) > 0;
+        $data = DB::table('Booking')
+            ->where('BookID', $BookID)
+            ->where('Code', $Code)
+            ->get();
+
+        return count($data) > 0;
     }
 
     //TODO [POST] /book/add-book
@@ -88,7 +99,13 @@ class  BookController extends Controller
             $arrReserved = array();
             $startTimestamp = (new \DateTime($request->StartDatetime))->getTimestamp();
             $endTimestamp = (new \DateTime($request->EndDatetime))->getTimestamp();
+            $nowTimestamp = (new \DateTime())->getTimestamp();
             //! S >= Now
+            if ($nowTimestamp >= $startTimestamp)
+                return response()->setJSON([
+                    "state" => false,
+                    "msg" => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
+                ]);
             foreach ($reservedList as $reserved) {
                 // Check if the properties exist before accessing them
                 $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
@@ -116,7 +133,7 @@ class  BookController extends Controller
                     break;
                 }
             }
-            
+
             //! ./Block Reverse exist
             if (count($arrReserved) > 0) {
                 return response()->json([
@@ -172,7 +189,6 @@ class  BookController extends Controller
                 //       $this->LineVIPRequest->sendMessage($lineMessage);
                 //  }
             } //! ./Line Notify
-
 
             return response()->json([
                 "state" => true,
@@ -256,8 +272,6 @@ class  BookController extends Controller
         }
     }
 
-
-
     //TODO [GET] /book/get-book-history
     public function getBookHistory()
     {
@@ -294,7 +308,6 @@ class  BookController extends Controller
                 ->where('Booking.Action', '=', 'booking')
                 ->where('Booking.Status', '=', 'approved')
                 ->get();
-
             return response()->json([
                 "state" => true,
                 "msg" => "แก้ไขรหัสผ่านสำเร็จ",
@@ -312,9 +325,9 @@ class  BookController extends Controller
     {
         try {
             $rules = [
-                "BookID"    => ["required", "int", "min:1"],
+                "BookID"    => ["required", "int"],
                 "Name"      => ["required", "string", "min:1"],
-                "Code"      => ["required", "int", "min:7"],
+                "Code"      => ["required", "string"],
                 "Company"   => ["required", "string", "min:1"],
                 "Tel"       => ["required", "string", "min:1"],
                 "Purpose"   => ["required", "string", "min:1"],
@@ -335,43 +348,39 @@ class  BookController extends Controller
             $Tel = $request->input('Tel');
             $Purpose = $request->input('Purpose');
 
+            $affectedRows = DB::table('Booking')->where('BookID', $BookID)->update([
+                'Name'    => $Name,
+                'Code'    => $Code,
+                'Company' => $Company,
+                'Tel'     => $Tel,
+                'Purpose' => $Purpose,
+            ]);
 
-            if (!$this->checkEditCode()) {
+            if (!$this->checkEditCode($BookID, $Code))
                 return response()->json([
                     "state" => false,
                     "msg" => "รหัสการยืนยันไม่ถูกต้อง"
-                ], 400);
+                ]);
+
+            if ($affectedRows === 0) {
+                return response()->json([
+                    "state" => false,
+                    "msg"   => "ไม่พบข้อมูลการจอง",
+                ], 404);
             }
 
-            $data = [
-                'Name'    => $Name,
-                'Code'    => $Code,
-                'Company' => $Company,
-                'Tel'     => $Tel,
-                'Purpose' => $Purpose,
-            ];
-
-            $this->BookModel->update($BookID, $data);
-
-            $result = [
-                'Name'    => $Name,
-                'Code'    => $Code,
-                'Company' => $Company,
-                'Tel'     => $Tel,
-                'Purpose' => $Purpose,
-            ];
             return response()->json([
                 "state" => true,
-                "msg" => "แก้ไขการจองสำเร็จ",
-                "data" => $result,
+                "msg"   => "แก้ไขการจองสำเร็จ",
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
-                "msg" => $e->getMessage()
+                "msg"   => $e->getMessage(),
             ], 500);
         }
     }
+
 
     //TODO [POST] /book/cancel-book
     public function cancelBook(Request $request)
@@ -382,7 +391,7 @@ class  BookController extends Controller
                 "BookID" => ["required", "int", "min:1"],
             ];
 
-            // Request Validation
+            //! ./Request Validation
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json([
@@ -390,6 +399,7 @@ class  BookController extends Controller
                     "msg" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
+            //! ./Request Validation
 
             $BookID = $request->input('BookID');
 
