@@ -200,14 +200,12 @@ class  AdminController extends Controller
                     "msg" => "Header[Authorization] ผิดพลาด",
                 ], 400);
 
-            //! Token index[1]
             if ($jwt->decoded->Role != 'admin')
                 return response()->setJSON([
                     "state" => false,
                     "msg" => "ไม่มีสิทธิ์การร้องขอข้อมูลนี้"
                 ], 400);
 
-            //! Body
             $rules = [
                 "BookID"        => ["required", "int"],
                 "isApproved"    => ["required", "boolean"],
