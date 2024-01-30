@@ -38,6 +38,8 @@ class  AdminController extends Controller
                     "msg" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
+            //! Get users information
+            //! check user
             $user = DB::table("Accounts")
                 ->where("Username", strtolower($request->Username))
                 ->first();
@@ -47,13 +49,16 @@ class  AdminController extends Controller
                     "msg" => "ไม่มีผู้ใช้งานในระบบ",
                 ], 400);
             }
-            $isPass = $user->Bcrypt === $request->Password;
+            //! check password
+            $isPass = $user->Password == $request->Password;
+            // $isPass = $user->Bcrypt->verify($Password, $user->Password);
             if (!$isPass) {
                 return response()->json([
                     "state" => false,
                     "msg" => "รหัสผ่านไม่ถูกต้อง",
                 ]);
             }
+            //! Set payload & Encode JWT
             date_default_timezone_set('Asia/Bangkok');
             $now = new \DateTime();
             $payload = [
@@ -82,6 +87,8 @@ class  AdminController extends Controller
     public function rePassword(Request $request)
     {
         try {
+            //! Request validation
+            //! Authorize 
             $authorize = $request->header("Authorization");
             $jwt = $this->jwtUtils->verifyToken($authorize);
             if (!$jwt->state) return response()->json([
@@ -95,11 +102,12 @@ class  AdminController extends Controller
                 "msg" => "Header[Authorization] ผิดพลาด",
             ], 400);
 
+            //! Body
             $rules = [
                 "oldPassword" => ["required", "string", "min:1"],
                 "newPassword" => ["required", "string", "min:1"],
             ];
-
+            //! ./Request validation
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json([
@@ -114,7 +122,7 @@ class  AdminController extends Controller
                     "msg" => "รหัสผ่านซ้ำกัน",
                 ], 400);
             }
-
+            //! Get user information & check old pasword
             $users = DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->first();
             $isPass = $request->oldPassword === $users->Password;
             if (!$isPass) {
@@ -124,6 +132,7 @@ class  AdminController extends Controller
                 ]);
             }
 
+            //! Hash new password & Update to DB
             DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->update(['Password' => $request->newPassword]);
 
             return response()->json([
@@ -142,6 +151,8 @@ class  AdminController extends Controller
     public function getBooksVIP(Request $request)
     {
         try {
+            //! Request validation
+            //! Authorize
             $authorize = $request->header("Authorization");
             $jwt = $this->jwtUtils->verifyToken($authorize);
             if (!$jwt->state) return response()->json([
@@ -155,6 +166,8 @@ class  AdminController extends Controller
                 "msg" => "Header[Authorization] ผิดพลาด",
             ], 400);
 
+
+            //! Decode token to payload
             if ($jwt->decoded->Role != 'admin')
                 return response()->setJSON([
                     "state" => false,
@@ -300,4 +313,65 @@ class  AdminController extends Controller
             ], 500);
         }
     }
+
+
+    // //TODO [POST] /admin/test-login
+    // public function testlogin(Request $request)
+    // {
+    //     try {
+    //         $rules = [
+    //             "Username" => ["required", "string", "min:1"],
+    //             "Password" => ["required", "string", "min:1"],
+    //         ];
+
+    //         $validator = Validator::make($request->all(), $rules);
+    //         if ($validator->fails()) {
+    //             return response()->json([
+    //                 "state" => false,
+    //                 "msg" => "การระบุข้อมูลไม่ครบถ้วน",
+    //             ], 400);
+    //         }
+    //         //! Get users information
+    //         //! check user
+    //         $user = DB::table("Accounts")
+    //             ->where("Username", strtolower($request->Username))
+    //             ->first();
+    //         if (!$user) {
+    //             return response()->json([
+    //                 "state" => false,
+    //                 "msg" => "ไม่มีผู้ใช้งานในระบบ",
+    //             ], 400);
+    //         }
+    //         //! check password
+    //         // $isPass = $user->Password == $request->Password;
+    //         $isPass = $user->Bcrypt->verify($Password, $user->Password);
+    //         if (!$isPass) {
+    //             return response()->json([
+    //                 "state" => false,
+    //                 "msg" => "รหัสผ่านไม่ถูกต้อง",
+    //             ]);
+    //         }
+    //         //! Set payload & Encode JWT
+    //         date_default_timezone_set('Asia/Bangkok');
+    //         $now = new \DateTime();
+    //         $payload = [
+    //             'AccountID' => $user->AccountID,
+    //             'Name' => $user->Name,
+    //             'Username' => $user->Username,
+    //             'Role' => $user->Role,
+    //             'iat' => $now->getTimestamp(), //! generate token time
+    //             'exp' => $now->modify('+30 hours')->getTimestamp() //! expire token time
+    //         ];
+    //         $token = $this->jwtUtils->generateToken($payload);
+
+    //         return response()->json([
+    //             "state" => true, "msg" => "เข้าสูระบบสำเร็จ", "token" => $token
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             "state" => false,
+    //             "msg" => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 }

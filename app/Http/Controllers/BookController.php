@@ -66,6 +66,8 @@ class  BookController extends Controller
                 "Purpose"       => ["required", "string", "min:1"],
             ];
 
+            //! Request Validation
+            //! NULL Check
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json([
@@ -74,6 +76,8 @@ class  BookController extends Controller
                 ], 400);
             }
 
+
+            //! Block Reserve exist
             $reservedList = DB::table('Booking')
                 ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
                 ->where('RoomID', $request->RoomID)
@@ -84,7 +88,7 @@ class  BookController extends Controller
             $arrReserved = array();
             $startTimestamp = (new \DateTime($request->StartDatetime))->getTimestamp();
             $endTimestamp = (new \DateTime($request->EndDatetime))->getTimestamp();
-
+            //! S >= Now
             foreach ($reservedList as $reserved) {
                 // Check if the properties exist before accessing them
                 $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
@@ -99,16 +103,21 @@ class  BookController extends Controller
                 $dbEndTimestamp = (new \DateTime($dbEndDatetime))->getTimestamp();
 
                 if (
+                    //! Start >= S > End
                     $startTimestamp >= $dbStartTimestamp && $startTimestamp < $dbEndTimestamp
+                    //! Start > E >= End
                     || $endTimestamp > $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
+                    //! S <= Start & E >= End
                     || $startTimestamp <= $dbStartTimestamp && $endTimestamp >= $dbEndTimestamp
+                    //! S >= Start & E <= End                    
                     || $startTimestamp >= $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
                 ) {
                     array_push($arrReserved, 1);
                     break;
                 }
             }
-
+            
+            //! ./Block Reverse exist
             if (count($arrReserved) > 0) {
                 return response()->json([
                     "state" => false,
