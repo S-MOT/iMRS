@@ -28,6 +28,7 @@ Route::prefix("admin")->controller(AdminController::class)->group(function () {
     Route::get("/get-books-vip", "getBooksVIP");
     Route::post("/admin-approvement", "adminApprovement");
     Route::post("/test-login", "testlogin");
+    Route::get("/test", "test");
 });
 
 Route::prefix("room")->controller(RoomController::class)->group(function () {

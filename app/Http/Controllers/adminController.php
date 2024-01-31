@@ -2,24 +2,51 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Http\Libraries\JWT\JWT;
+use App\Http\Libraries\LineNotify;
+use App\Models\AdminModel;
+use App\Models\BookModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Http\Libraries\Bcrypt;
+
 use App\Http\Libraries\JWT\JWTUtils;
 use App\Http\Libraries\JWT\Key;
 
 class  AdminController extends Controller
 {
     private $jwtUtils;
+    private $AdminModel;
+    private $BookModel;
     private $Bcrypt;
 
-
+    private $Line;
     public function __construct()
     {
-        $this->jwtUtils = new JWTUtils();
         $this->Bcrypt = new Bcrypt(10);
+        $this->AdminModel = new AdminModel();
+        $this->BookModel = new BookModel();
+        $this->Line = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS
+        $this->jwtUtils = new JWTUtils();
+    }
+
+    // private function getUserInfo($Username)
+    // {
+    //     $users = $this->AdminModel->where('Username', $Username)->findAll();
+    //     return $users;
+    // }
+
+    private function getRoomReserved($RoomID, $StartDatetime)
+    {
+        $query = DB::table('Booking')
+            ->select('*')
+            ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
+            ->whereDate('StartDatetime', '=', date('Y-m-d', strtotime($StartDatetime)))
+            ->where('Action', '=', 'booking')
+            ->where('Status', '=', 'approved');
+        return $query->first();
     }
 
     //TODO [POST] /check-login
@@ -40,6 +67,7 @@ class  AdminController extends Controller
             }
             //! Get users information
             //! check user
+            // $this->getUserInfo($request->Username);
             $user = DB::table("Accounts")
                 ->where("Username", strtolower($request->Username))
                 ->first();
@@ -83,7 +111,6 @@ class  AdminController extends Controller
     }
 
     //TODO [POST] /admin/re-password
-
     public function rePassword(Request $request)
     {
         try {
@@ -123,6 +150,7 @@ class  AdminController extends Controller
                 ], 400);
             }
             //! Get user information & check old pasword
+            // $this->getUserInfo($request->Username);
             $users = DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->first();
             $isPass = $request->oldPassword === $users->Password;
             if (!$isPass) {
@@ -131,7 +159,6 @@ class  AdminController extends Controller
                     "msg" => "รหัสผ่านไม่ถูกต้อง",
                 ]);
             }
-
             //! Hash new password & Update to DB
             DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->update(['Password' => $request->newPassword]);
 
@@ -169,7 +196,7 @@ class  AdminController extends Controller
 
             //! Decode token to payload
             if ($jwt->decoded->Role != 'admin')
-                return response()->setJSON([
+                return response()->json([
                     "state" => false,
                     "msg" => "ไม่มีสิทธิ์การร้องขอข้อมูลนี้"
                 ], 400);
@@ -219,7 +246,7 @@ class  AdminController extends Controller
             //! Token index[1]
             //! Decode token to payload
             if ($jwt->decoded->Role != 'admin')
-                return response()->setJSON([
+                return response()->json([
                     "state" => false,
                     "msg" => "ไม่มีสิทธิ์การร้องขอข้อมูลนี้"
                 ], 400);
@@ -234,38 +261,37 @@ class  AdminController extends Controller
             //! ./Request validation
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
+
                 return response()->json([
                     "state" => false,
                     "msg" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
 
-            $reservedList = DB::table("Booking")
-                ->select('Booking.*', 'Rooms.*')
-                ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
-                ->where('Booking.BookID', '=', $request->BookID)
-                ->where('Rooms.RoomLevel', '=', 'vip')
-                ->first();
-
-
             //! Block Reserve exist
 
+            if ($request->isApproved) {
+            }
             $reservedList = DB::table('Booking')
                 ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
                 ->where('RoomID', $request->RoomID)
                 ->where('Action', '!=', 'canceled')
                 ->where('Status', '=', 'approved')
                 ->get();
+
+            // $reservedList = $this->BookModel->query([$request->RoomID])->get();
             $arrReserved = array();
-            $startTimestamp = (new \DateTime($request->StartDatetime))->getTimestamp();
-            $endTimestamp = (new \DateTime($request->EndDatetime))->getTimestamp();
+            $startTimestamp = (new \DateTime($reservedList->StartDatetime))->getTimestamp();
+            $endTimestamp = (new \DateTime($reservedList->EndDatetime))->getTimestamp();
             $nowTimestamp = (new \DateTime())->getTimestamp();
             //! S >= Now
-            if ($nowTimestamp >= $startTimestamp)
-                return response()->setJSON([
+            if ($nowTimestamp >= $startTimestamp) {
+                return response()->json([
                     "state" => false,
                     "msg" => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
                 ]);
+            }
+
             foreach ($reservedList as $reserved) {
                 // Check if the properties exist before accessing them
                 $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
@@ -302,7 +328,6 @@ class  AdminController extends Controller
             }
 
             //! ./Block Reserve exist
-
             $data = [
                 'Action' => $request->isApproved ? "booking" : "canceled",
                 'Status' => $request->isApproved ? "approved" : "canceled"
@@ -312,9 +337,30 @@ class  AdminController extends Controller
                 ->where('BookID', '=', $request->BookID)
                 ->update($data);
 
+            //! Admin approved
+
+            if ($request->isApproved && $request->bookInfo->Status == 'pending') {
+                $allReserved = $this->getRoomReserved($request->bookInfo->RoomID, $request->bookInfo->StartDatetime);
+
+                $lineMessage = "\n" . "🌟 " . $request->bookInfo->RoomName . " (" . $request->bookInfo->Amount . " ที่นั่ง) 🌟\n"
+                    . "วันที่ " . (new \DateTime($request->booleanbookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+                    . "คิวจองห้องประชุม\n";
+
+                foreach ($allReserved as $reserved) {
+                    $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
+                }
+
+                $lineMessage .= "\n";
+                $lineMessage .= "ต้องการจองห้องประชุม\n";
+                $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
+
+                $this->$request->Line->sendMessage($lineMessage);
+            }
+
             return response()->json([
                 "state" => true,
                 "msg" =>  $request->isApproved ? "อนุมัติการจองห้องประชุมสำเร็จ" : "ยกเลิกการจองห้องประชุมสำเร็จ",
+                "data" => $reservedList
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -384,4 +430,19 @@ class  AdminController extends Controller
             ], 500);
         }
     }
+
+    // public function test()
+    // {
+    //     try {
+    //         $this->Line->sendMessage("มงคล");
+    //         return response()->json([
+    //             "state" => true, "msg" => "test",
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             "state" => false,
+    //             "msg" => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 }
