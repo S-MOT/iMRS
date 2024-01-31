@@ -34,7 +34,7 @@ class  BookController extends Controller
     {
         $query = DB::table('Rooms')
             ->select('*')
-            ->where('BookID', '=', $RoomID)->first();
+            ->where('RoomID', '=', $RoomID)->first();
         return $query;
     }
     private function getRoomReserved($RoomID, $StartDatetime)
@@ -49,11 +49,6 @@ class  BookController extends Controller
     }
     private function checkEditCode($BookID, $Code)
     {
-        // $data = DB::table('Booking')
-        //     ->where('BookID', '=', $BookID)
-        //     ->where('Code', '=', $Code)
-        //     ->get();
-        // return count($data) > 0;
         $data = DB::table('Booking')
             ->where('BookID', $BookID)
             ->where('Code', $Code)
@@ -104,7 +99,7 @@ class  BookController extends Controller
             if ($nowTimestamp >= $startTimestamp)
                 return response()->setJSON([
                     "state" => false,
-                    "msg" => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
+                    "msg"   => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
                 ]);
             foreach ($reservedList as $reserved) {
                 // Check if the properties exist before accessing them
@@ -144,7 +139,7 @@ class  BookController extends Controller
 
             //! ./Block Reverse exist
 
-            // $roomInfo = $this->checkRoom($RoomID);
+            $roomInfo = DB::checkRoom();
 
             // Add Booking
             DB::table("Booking")->insert([
@@ -157,8 +152,10 @@ class  BookController extends Controller
                 "StartDatetime"   => $request->StartDatetime,
                 "EndDatetime"     => $request->EndDatetime,
                 "Purpose"         => $request->Purpose,
+                $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
+
             ]); { //! Line Notify
-                //  $allReserved = $this->getRoomReserved($RoomID, $StartDatetime);
+                //  $allReserved = $this->getRoomReserved($RoomID,$StartDatetime);
                 //  if ($roomInfo->RoomLevel != 'vip') {
 
                 //       $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
@@ -174,7 +171,7 @@ class  BookController extends Controller
                 //       $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
 
                 //       $this->Line->sendMessage($lineMessage);
-                //       return $this->response->setJSON(["state" => true, "msg" => "เพิ่มการจองสำเร็จ", "lineMessage" => $lineMessage]);
+                //       return response()->setJSON(["state" => true, "msg" => "เพิ่มการจองสำเร็จ", "lineMessage" => $lineMessage]);
                 //  } else {
                 //       $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
                 //            . "วันที่ " . (new \DateTime($StartDatetime))->format('d/m/Y') . "\n\n";
@@ -340,7 +337,6 @@ class  BookController extends Controller
                     "msg"   => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
-
             $BookID = $request->input('BookID');
             $Name = $request->input('Name');
             $Code = $request->input('Code');
@@ -417,27 +413,27 @@ class  BookController extends Controller
             DB::table('Booking')
                 ->where('BookID', $BookID)
                 ->first(); { //! Line Notify
-                //             //   $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
-                //             //   $RoomLevel = ((object)$allReserved[0])->RoomLevel;
+                //   $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
+                //   $RoomLevel = ((object)$allReserved[0])->RoomLevel;
 
-                //             //   $lineMessage = "\n" . $BookInfo->RoomName . " (" . $BookInfo->Amount . " ที่นั่ง)\n"
-                //             //        . "วันที่ " . (new \DateTime($BookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
-                //             //        . "คิวจองห้องประชุม\n";
+                //   $lineMessage = "\n" . $BookInfo->RoomName . " (" . $BookInfo->Amount . " ที่นั่ง)\n"
+                //        . "วันที่ " . (new \DateTime($BookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+                //        . "คิวจองห้องประชุม\n";
 
-                //             //   foreach ($allReserved as $reserved) {
-                //             //        $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
-                //             //   }
+                //   foreach ($allReserved as $reserved) {
+                //        $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
+                //   }
 
-                //             //   $lineMessage .= "\n";
-                //             //   $lineMessage .= "ต้องการจองห้องประชุม\n";
-                //             //   $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
+                //   $lineMessage .= "\n";
+                //   $lineMessage .= "ต้องการจองห้องประชุม\n";
+                //   $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
 
-                //             //   if ($RoomLevel == 'vip') {
-                //             //        $this->LineVIP->sendMessage($lineMessage);
-                //             //   } else {
-                //             //        $this->Line->sendMessage($lineMessage);
-                //             //   }
-                //             //         
+                //   if ($RoomLevel == 'vip') {
+                //        $this->LineVIP->sendMessage($lineMessage);
+                //   } else {
+                //        $this->Line->sendMessage($lineMessage);
+                //   }
+
             } //   //! ./Line Notify
 
             return response()->json([
