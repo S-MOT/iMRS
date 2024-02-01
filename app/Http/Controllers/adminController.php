@@ -32,11 +32,11 @@ class  AdminController extends Controller
         $this->jwtUtils = new JWTUtils();
     }
 
-    // private function getUserInfo($Username)
-    // {
-    //     $users = $this->AdminModel->where('Username', $Username)->findAll();
-    //     return $users;
-    // }
+    private function getUserInfo($Username)
+    {
+        $users = $this->AdminModel->where('Username', $Username)->first();
+        return $users;
+    }
 
     private function getRoomReserved($RoomID, $StartDatetime)
     {
@@ -67,7 +67,7 @@ class  AdminController extends Controller
             }
             //! Get users information
             //! check user
-            // $this->getUserInfo($request->Username);
+            $this->getUserInfo($request->Username);
             $user = DB::table("Accounts")
                 ->where("Username", strtolower($request->Username))
                 ->first();
@@ -150,7 +150,7 @@ class  AdminController extends Controller
                 ], 400);
             }
             //! Get user information & check old pasword
-            // $this->getUserInfo($request->Username);
+            $this->getUserInfo($request->Username);
             $users = DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->first();
             $isPass = $request->oldPassword === $users->Password;
             if (!$isPass) {
@@ -242,7 +242,6 @@ class  AdminController extends Controller
                     "msg" => "Header[Authorization] ผิดพลาด",
                 ], 400);
 
-
             //! Token index[1]
             //! Decode token to payload
             if ($jwt->decoded->Role != 'admin')
@@ -256,9 +255,6 @@ class  AdminController extends Controller
                 "BookID"        => ["required", "int"],
                 "isApproved"    => ["required", "boolean"],
             ];
-
-
-            //! ./Request validation
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
 
@@ -267,67 +263,73 @@ class  AdminController extends Controller
                     "msg" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
+            // //! ./Request validation
+
+            $books = DB::table('Booking')
+                ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
+                ->get();
+            $bookInfo = (object)$books[0];
 
             //! Block Reserve exist
-
+            date_default_timezone_set('Asia/Bangkok');
             if ($request->isApproved) {
-            }
-            $reservedList = DB::table('Booking')
-                ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
-                ->where('RoomID', $request->RoomID)
-                ->where('Action', '!=', 'canceled')
-                ->where('Status', '=', 'approved')
-                ->get();
+                $BlockReserve = DB::table('Booking')
+                    ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
+                    ->where('BookID', $request->BookID)
+                    ->where('Action', '!=', 'canceled')
+                    ->where('Status', '=', 'approved')
+                    ->get();
+                $reservedList = $this->BookModel->query($BlockReserve, [$bookInfo->RoomID])->get();
+                $arrReserved = array();
 
-            // $reservedList = $this->BookModel->query([$request->RoomID])->get();
-            $arrReserved = array();
-            $startTimestamp = (new \DateTime($reservedList->StartDatetime))->getTimestamp();
-            $endTimestamp = (new \DateTime($reservedList->EndDatetime))->getTimestamp();
-            $nowTimestamp = (new \DateTime())->getTimestamp();
-            //! S >= Now
-            if ($nowTimestamp >= $startTimestamp) {
-                return response()->json([
-                    "state" => false,
-                    "msg" => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
-                ]);
-            }
+                $nowTimestamp = new \DateTime();
+                $startTimestamp = (new \DateTime($bookInfo->StartDatetime))->getTimestamp();
+                $endTimestamp = (new \DateTime($bookInfo->EndDatetime))->getTimestamp();
 
-            foreach ($reservedList as $reserved) {
-                // Check if the properties exist before accessing them
-                $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
-                $dbEndDatetime = isset($reserved->EndDatetime) ? $reserved->EndDatetime : null;
-
-                if ($dbStartDatetime === null || $dbEndDatetime === null) {
-                    // Handle the case where the properties are not present
-                    continue;
+                // //! S >= Now
+                if ($nowTimestamp->getTimestamp() >= $startTimestamp) {
+                    return response()->json([
+                        "state" => false,
+                        "msg" => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
+                    ]);
                 }
 
-                $dbStartTimestamp = (new \DateTime($dbStartDatetime))->getTimestamp();
-                $dbEndTimestamp = (new \DateTime($dbEndDatetime))->getTimestamp();
+                $arrReserved = [];
+                foreach ($reservedList as $reserved) {
 
-                if (
-                    //! Start >= S > End
-                    $startTimestamp >= $dbStartTimestamp && $startTimestamp < $dbEndTimestamp
-                    //! Start > E >= End
-                    || $endTimestamp > $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
-                    //! S <= Start & E >= End
-                    || $startTimestamp <= $dbStartTimestamp && $endTimestamp >= $dbEndTimestamp
-                    //! S >= Start & E <= End 
-                    || $startTimestamp >= $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
-                ) {
-                    array_push($arrReserved, 1);
-                    break;
+                    $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
+                    $dbEndDatetime = isset($reserved->EndDatetime) ? $reserved->EndDatetime : null;
+
+                    if ($dbStartDatetime === null || $dbEndDatetime === null) {
+
+                        continue;
+                    }
+                    $dbStartTimestamp = (new \DateTime($dbStartDatetime))->getTimestamp();
+                    $dbEndTimestamp = (new \DateTime($dbEndDatetime))->getTimestamp();
+
+                    if (
+                        //! Start >= S > End
+                        $startTimestamp >= $dbStartTimestamp && $startTimestamp < $dbEndTimestamp
+                        //! Start > E >= End
+                        || $endTimestamp > $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
+                        //! S <= Start & E >= End
+                        || $startTimestamp <= $dbStartTimestamp && $endTimestamp >= $dbEndTimestamp
+                        //! S >= Start & E <= End 
+                        || $startTimestamp >= $dbStartTimestamp && $endTimestamp <= $dbEndTimestamp
+                    ) {
+                        array_push($arrReserved, 1);
+                        break;
+                    }
+                }
+                if (count($arrReserved) > 0) {
+                    return response()->json([
+                        "state" => false,
+                        "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
+                    ], 400);
                 }
             }
-
-            if (count($arrReserved) > 0) {
-                return response()->json([
-                    "state" => false,
-                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
-                ], 400);
-            }
-
-            //! ./Block Reserve exist
+            // //! ./Block Reserve exist
+            //! Update Action & Status
             $data = [
                 'Action' => $request->isApproved ? "booking" : "canceled",
                 'Status' => $request->isApproved ? "approved" : "canceled"
@@ -337,30 +339,26 @@ class  AdminController extends Controller
                 ->where('BookID', '=', $request->BookID)
                 ->update($data);
 
-            //! Admin approved
-
-            if ($request->isApproved && $request->bookInfo->Status == 'pending') {
+            // //! Admin approved
+            if ($request->isApproved && $bookInfo->Status == 'pending') {
                 $allReserved = $this->getRoomReserved($request->bookInfo->RoomID, $request->bookInfo->StartDatetime);
 
                 $lineMessage = "\n" . "🌟 " . $request->bookInfo->RoomName . " (" . $request->bookInfo->Amount . " ที่นั่ง) 🌟\n"
-                    . "วันที่ " . (new \DateTime($request->booleanbookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+                    . "วันที่ " . (new \DateTime($request->bookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
                     . "คิวจองห้องประชุม\n";
 
                 foreach ($allReserved as $reserved) {
                     $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
                 }
-
                 $lineMessage .= "\n";
                 $lineMessage .= "ต้องการจองห้องประชุม\n";
                 $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
-
-                $this->$request->Line->sendMessage($lineMessage);
+                $request->Line->sendMessage($lineMessage);
             }
-
             return response()->json([
                 "state" => true,
                 "msg" =>  $request->isApproved ? "อนุมัติการจองห้องประชุมสำเร็จ" : "ยกเลิกการจองห้องประชุมสำเร็จ",
-                "data" => $reservedList
+                "data" =>  $nowTimestamp
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -369,74 +367,57 @@ class  AdminController extends Controller
             ], 500);
         }
     }
-
-
-    // //TODO [POST] /admin/test-login
-    public function testlogin(Request $request)
-    {
-        try {
-            $rules = [
-                "Username" => ["required", "string", "min:1"],
-                "Password" => ["required", "string", "min:1"],
-            ];
-
-            $validator = Validator::make($request->all(), $rules);
-            if ($validator->fails()) {
-                return response()->json([
-                    "state" => false,
-                    "msg" => "การระบุข้อมูลไม่ครบถ้วน",
-                ], 400);
-            }
-            //! Get users information
-            //! check user
-            $user = DB::table("Accounts")
-                ->where("Username", strtolower($request->Username))
-                ->first();
-            if (!$user) {
-                return response()->json([
-                    "state" => false,
-                    "msg" => "ไม่มีผู้ใช้งานในระบบ",
-                ], 400);
-            }
-            //! check password
-            $isPass = $user->Password == $request->Password;
-            // $isPass = $user->Bcrypt->verify($Password, $user->Password);
-            if (!$isPass) {
-                return response()->json([
-                    "state" => false,
-                    "msg" => "รหัสผ่านไม่ถูกต้อง",
-                ]);
-            }
-            //! Set payload & Encode JWT
-            date_default_timezone_set('Asia/Bangkok');
-            $now = new \DateTime();
-            $payload = [
-                'AccountID' => $user->AccountID,
-                'Name' => $user->Name,
-                'Username' => $user->Username,
-                'Role' => $user->Role,
-                'iat' => $now->getTimestamp(), //! generate token time
-                'exp' => $now->modify('+30 hours')->getTimestamp() //! expire token time
-            ];
-            $token = $this->jwtUtils->generateToken($payload);
-
-            return response()->json([
-                "state" => true, "msg" => "เข้าสูระบบสำเร็จ", "token" => $token
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                "state" => false,
-                "msg" => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    // public function test()
+    // // //TODO [POST] /admin/test-login
+    // public function testlogin(Request $request)
     // {
     //     try {
-    //         $this->Line->sendMessage("มงคล");
+    //         $rules = [
+    //             "Username" => ["required", "string", "min:1"],
+    //             "Password" => ["required", "string", "min:1"],
+    //         ];
+
+    //         $validator = Validator::make($request->all(), $rules);
+    //         if ($validator->fails()) {
+    //             return response()->json([
+    //                 "state" => false,
+    //                 "msg" => "การระบุข้อมูลไม่ครบถ้วน",
+    //             ], 400);
+    //         }
+    //         //! Get users information
+    //         //! check user
+    //         $user = DB::table("Accounts")
+    //             ->where("Username", strtolower($request->Username))
+    //             ->first();
+    //         if (!$user) {
+    //             return response()->json([
+    //                 "state" => false,
+    //                 "msg" => "ไม่มีผู้ใช้งานในระบบ",
+    //             ], 400);
+    //         }
+    //         //! check password
+    //         $isPass = $user->Password == $request->Password;
+    //         // $isPass = $user->Bcrypt->verify($Password, $user->Password);
+    //         if (!$isPass) {
+    //             return response()->json([
+    //                 "state" => false,
+    //                 "msg" => "รหัสผ่านไม่ถูกต้อง",
+    //             ]);
+    //         }
+    //         //! Set payload & Encode JWT
+    //         date_default_timezone_set('Asia/Bangkok');
+    //         $now = new \DateTime();
+    //         $payload = [
+    //             'AccountID' => $user->AccountID,
+    //             'Name' => $user->Name,
+    //             'Username' => $user->Username,
+    //             'Role' => $user->Role,
+    //             'iat' => $now->getTimestamp(), //! generate token time
+    //             'exp' => $now->modify('+30 hours')->getTimestamp() //! expire token time
+    //         ];
+    //         $token = $this->jwtUtils->generateToken($payload);
+
     //         return response()->json([
-    //             "state" => true, "msg" => "test",
+    //             "state" => true, "msg" => "เข้าสูระบบสำเร็จ", "token" => $token
     //         ], 201);
     //     } catch (\Exception $e) {
     //         return response()->json([
@@ -445,4 +426,19 @@ class  AdminController extends Controller
     //         ], 500);
     //     }
     // }
+
+    public function test()
+    {
+        try {
+            $this->Line->sendMessage("มงคล");
+            return response()->json([
+                "state" => true, "msg" => "test",
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                "state" => false,
+                "msg" => $e->getMessage()
+            ], 500);
+        }
+    }
 }

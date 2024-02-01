@@ -24,8 +24,7 @@ class  BookController extends Controller
         // $this->BookModel = new BookModel();
         $this->Line = new LineNotify('sCkhQ307rX0KCwsXj9uWK3C067ek5BQw0e4R050FWLm'); //! Line Token General room (test iMRS2)
         $this->LineVIPRequest = new LineNotify('Meeh3Fg2rrgrv75Z3pXEAEGjxBCdshzCVyEJkh831LM'); //! Line Token VIP Request room (VIP)
-        $this->LineVIP = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS (MRS)
-
+        $this->LineVIP = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS (MRS)s
     }
     private function checkRoom($RoomID)
     {
@@ -80,6 +79,22 @@ class  BookController extends Controller
             }
 
             //! Block Reserve exist
+
+            $reservedList = DB::table('Booking')
+                ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
+                ->where('RoomID', $request->RoomID)
+                ->where('Action', '!=', 'canceled')
+                ->where('Status', '=', 'approved')
+                ->get();
+
+            if ($reservedList === null) {
+                //กรณีที่ไม่มีการจองห้อง
+                return response()->json([
+                    "state" => false,
+                    "msg"   => "ไม่พบการจองสำหรับ RoomID ที่ระบุ",
+                ], 404);
+            }
+
             $reservedList = DB::table('Booking')
                 ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
                 ->where('RoomID', $request->RoomID)
@@ -97,13 +112,13 @@ class  BookController extends Controller
                     "state" => false,
                     "msg"   => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
                 ]);
+
             foreach ($reservedList as $reserved) {
-                // Check if the properties exist before accessing them
+
                 $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
                 $dbEndDatetime = isset($reserved->EndDatetime) ? $reserved->EndDatetime : null;
 
                 if ($dbStartDatetime === null || $dbEndDatetime === null) {
-                    // Handle the case where the properties are not present
                     continue;
                 }
 
@@ -129,60 +144,63 @@ class  BookController extends Controller
             if (count($arrReserved) > 0) {
                 return response()->json([
                     "state" => false,
-                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
+                    "msg" => "",
                 ], 400);
             }
 
-            //! ./Block Reverse exist
-
             $roomInfo = $this->checkRoom($request->RoomID);
 
+            if ($roomInfo === null) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
+                ], 404);
+            }
             // Add Booking
             DB::table("Booking")->insert([
-                "RoomID"          => $request->RoomID,
-                "Name"            => $request->Name,
-                "Code"            => $request->Code,
-                "Company"         => $request->Company,
-                "Tel"             => $request->Tel,
-                "Timestamp"       => now(),
-                "StartDatetime"   => $request->StartDatetime,
-                "EndDatetime"     => $request->EndDatetime,
-                "Purpose"         => $request->Purpose,
-                // $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
+                "RoomID"        => $request->RoomID,
+                "Name"          => $request->Name,
+                "Code"          => $request->Code,
+                "Company"       => $request->Company,
+                "Tel"           => $request->Tel,
+                "Timestamp"     => now(),
+                "StartDatetime" => $request->StartDatetime,
+                "EndDatetime"   => $request->EndDatetime,
+                "Purpose"       => $request->Purpose,
+                "Status"        => $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
 
-            ]);
-            // { //! Line Notify
-            //     $allReserved = $this->getRoomReserved($request->RoomID, $request->StartDatetime);
-            //     if ($roomInfo->RoomLevel != 'vip') {
+            ]); { //! Line Notify
+                $allReserved = $this->getRoomReserved($request->RoomID, $request->StartDatetime);
+                if ($roomInfo->RoomLevel != 'vip') {
 
-            //         $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
-            //             . "วันที่ " . (new \DateTime($request->StartDatetime))->format('d/m/Y') . "\n\n"
-            //             . "คิวจองห้องประชุม\n";
+                    $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
+                        . "วันที่ " . (new \DateTime($request->StartDatetime))->format('d/m/Y') . "\n\n"
+                        . "คิวจองห้องประชุม\n";
 
-            //         foreach ($allReserved as $reserved) {
-            //             $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
-            //         }
+                    foreach ($allReserved as $reserved) {
+                        $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
+                    }
 
-            //         $lineMessage .= "\n";
-            //         $lineMessage .= "ต้องการจองห้องประชุม\n";
-            //         $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
+                    $lineMessage .= "\n";
+                    $lineMessage .= "ต้องการจองห้องประชุม\n";
+                    $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
 
-            //         $this->Line->sendMessage($lineMessage);
-            //         return response()->setJSON(["state" => true, "msg" => "เพิ่มการจองสำเร็จ", "lineMessage" => $lineMessage]);
-            //     } else {
-            //         $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
-            //             . "วันที่ " . (new \DateTime($request->StartDatetime))->format('d/m/Y') . "\n\n";
+                    $this->Line->sendMessage($lineMessage);
+                    return response()->setJSON(["state" => true, "msg" => "เพิ่มการจองสำเร็จ", "lineMessage" => $lineMessage]);
+                } else {
+                    $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
+                        . "วันที่ " . (new \DateTime($request->StartDatetime))->format('d/m/Y') . "\n\n";
 
-            //         foreach ($allReserved as $reserved) {
-            //             $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
-            //         }
+                    foreach ($allReserved as $reserved) {
+                        $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
+                    }
 
-            //         $lineMessage .= "กรุณาอนุมัติการจองได้ที่ :\n";
-            //         $lineMessage .= "https://snc-services.sncformer.com/iMRS/IT/";
+                    $lineMessage .= "กรุณาอนุมัติการจองได้ที่ :\n";
+                    $lineMessage .= "https://snc-services.sncformer.com/iMRS/IT/";
 
-            //         $this->LineVIPRequest->sendMessage($lineMessage);
-            //     }
-            // } //! ./Line Notify
+                    $this->LineVIPRequest->sendMessage($lineMessage);
+                }
+            } //! ./Line Notify
 
             return response()->json([
                 "state" => true,
@@ -270,14 +288,12 @@ class  BookController extends Controller
     public function getBookHistory()
     {
         try {
-
             $result = DB::table('Booking')
                 ->select('*')
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
                 ->orderByDesc('BookID')
                 ->take(50)
                 ->get();
-
             return response()->json([
                 "state" => true,
                 "data" => $result,
@@ -409,28 +425,31 @@ class  BookController extends Controller
 
             $BookInfo = DB::table('Booking')
                 ->where('BookID', $BookID)
-                ->first(); { //! Line Notify
-                $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
-                $RoomLevel = ((object)$allReserved[0])->RoomLevel;
+                ->first();
 
-                $lineMessage = "\n" . $BookInfo->RoomName . " (" . $BookInfo->Amount . " ที่นั่ง)\n"
-                    . "วันที่ " . (new \DateTime($BookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
-                    . "คิวจองห้องประชุม\n";
+            if ($BookInfo) { // Check if $BookInfo is not null
+                { //! Line Notify
+                    $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
+                    $RoomLevel = ((object)$allReserved[0])->RoomLevel;
 
-                foreach ($allReserved as $reserved) {
-                    $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
-                }
+                    $lineMessage = "\n" . $BookInfo->RoomName . " (" . $BookInfo->Amount . " ที่นั่ง)\n"
+                        . "วันที่ " . (new \DateTime($BookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+                        . "คิวจองห้องประชุม\n";
 
-                $lineMessage .= "\n";
-                $lineMessage .= "ต้องการจองห้องประชุม\n";
-                $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
+                    foreach ($allReserved as $reserved) {
+                        $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
+                    }
+                    $lineMessage .= "\n";
+                    $lineMessage .= "ต้องการจองห้องประชุม\n";
+                    $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
 
-                if ($RoomLevel == 'vip') {
-                    $this->LineVIP->sendMessage($lineMessage);
-                } else {
-                    $this->Line->sendMessage($lineMessage);
-                }
-            } //   //! ./Line Notify
+                    if ($RoomLevel == 'vip') {
+                        $this->LineVIP->sendMessage($lineMessage);
+                    } else {
+                        $this->Line->sendMessage($lineMessage);
+                    }
+                } //   //! ./Line Notify
+            }
 
             return response()->json([
                 "state" => true,

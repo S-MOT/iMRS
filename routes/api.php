@@ -42,5 +42,6 @@ Route::prefix("book")->controller(BookController::class)->group(function () {
     Route::get("/get-book", "getBook");
     Route::get("/get-book/{code}", "getBookByCode");
     Route::get("/get-book-room-id", "getBookByRoomID");
+    Route::get("/get-book-history", "getBookHistory");
     Route::post("/test-login", "testlogin");
 });
