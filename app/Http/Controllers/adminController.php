@@ -43,10 +43,12 @@ class  AdminController extends Controller
         $query = DB::table('Booking')
             ->select('*')
             ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
+            ->where('Rooms.RoomID', "=", $RoomID)
             ->whereDate('StartDatetime', '=', date('Y-m-d', strtotime($StartDatetime)))
             ->where('Action', '=', 'booking')
-            ->where('Status', '=', 'approved');
-        return $query->first();
+            ->where('Status', '=', 'approved')
+            ->get();
+        return $query;
     }
 
     //TODO [POST] /check-login
@@ -267,25 +269,24 @@ class  AdminController extends Controller
 
             $books = DB::table('Booking')
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
+                ->where('BookID', '=', $request->BookID)
                 ->get();
             $bookInfo = (object)$books[0];
 
             //! Block Reserve exist
             date_default_timezone_set('Asia/Bangkok');
             if ($request->isApproved) {
-                $BlockReserve = DB::table('Booking')
+                $reservedList =  DB::table('Booking')
                     ->selectRaw('TO_CHAR("StartDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "StartDatetime", TO_CHAR("EndDatetime", \'YYYY-MM-DD HH24:MI:SS\') AS "EndDatetime"')
                     ->where('BookID', $request->BookID)
                     ->where('Action', '!=', 'canceled')
                     ->where('Status', '=', 'approved')
                     ->get();
-                $reservedList = $this->BookModel->query($BlockReserve, [$bookInfo->RoomID])->get();
                 $arrReserved = array();
 
                 $nowTimestamp = new \DateTime();
                 $startTimestamp = (new \DateTime($bookInfo->StartDatetime))->getTimestamp();
                 $endTimestamp = (new \DateTime($bookInfo->EndDatetime))->getTimestamp();
-
                 // //! S >= Now
                 if ($nowTimestamp->getTimestamp() >= $startTimestamp) {
                     return response()->json([
@@ -295,15 +296,16 @@ class  AdminController extends Controller
                 }
 
                 $arrReserved = [];
+
                 foreach ($reservedList as $reserved) {
 
                     $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
                     $dbEndDatetime = isset($reserved->EndDatetime) ? $reserved->EndDatetime : null;
 
                     if ($dbStartDatetime === null || $dbEndDatetime === null) {
-
                         continue;
                     }
+
                     $dbStartTimestamp = (new \DateTime($dbStartDatetime))->getTimestamp();
                     $dbEndTimestamp = (new \DateTime($dbEndDatetime))->getTimestamp();
 
@@ -340,11 +342,11 @@ class  AdminController extends Controller
                 ->update($data);
 
             // //! Admin approved
-            if ($request->isApproved && $bookInfo->Status == 'pending') {
-                $allReserved = $this->getRoomReserved($request->bookInfo->RoomID, $request->bookInfo->StartDatetime);
+            if ($request->isApproved) {
+                $allReserved = $this->getRoomReserved($bookInfo->RoomID, $bookInfo->StartDatetime);
 
-                $lineMessage = "\n" . "🌟 " . $request->bookInfo->RoomName . " (" . $request->bookInfo->Amount . " ที่นั่ง) 🌟\n"
-                    . "วันที่ " . (new \DateTime($request->bookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+                $lineMessage = "\n" . "🌟 " . $bookInfo->RoomName . " (" . $bookInfo->Amount . " ที่นั่ง) 🌟\n"
+                    . "วันที่ " . (new \DateTime($bookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
                     . "คิวจองห้องประชุม\n";
 
                 foreach ($allReserved as $reserved) {
@@ -353,12 +355,13 @@ class  AdminController extends Controller
                 $lineMessage .= "\n";
                 $lineMessage .= "ต้องการจองห้องประชุม\n";
                 $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
-                $request->Line->sendMessage($lineMessage);
-            }
+                $this->Line->sendMessage($lineMessage);
+            };
+
             return response()->json([
                 "state" => true,
                 "msg" =>  $request->isApproved ? "อนุมัติการจองห้องประชุมสำเร็จ" : "ยกเลิกการจองห้องประชุมสำเร็จ",
-                "data" =>  $nowTimestamp
+                "data" => []
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -367,7 +370,7 @@ class  AdminController extends Controller
             ], 500);
         }
     }
-    // // //TODO [POST] /admin/test-login
+    // //TODO [POST] /admin/test-login
     // public function testlogin(Request $request)
     // {
     //     try {
