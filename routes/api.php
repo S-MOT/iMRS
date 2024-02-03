@@ -27,14 +27,12 @@ Route::prefix("admin")->controller(AdminController::class)->group(function () {
     Route::post("/re-password", "rePassword");
     Route::get("/get-books-vip", "getBooksVIP");
     Route::post("/admin-approvement", "adminApprovement");
-    Route::post("/test-login", "testlogin");
-    Route::get("/test", "test");
+    // Route::get("/test", "test");
 });
 
 Route::prefix("room")->controller(RoomController::class)->group(function () {
     Route::get("/rooms-list", "roomsList");
 });
-
 Route::prefix("book")->controller(BookController::class)->group(function () {
     Route::post("/add-book", "addBook");
     Route::post("/edit-book", "editBook");
@@ -43,5 +41,4 @@ Route::prefix("book")->controller(BookController::class)->group(function () {
     Route::get("/get-book/{code}", "getBookByCode");
     Route::get("/get-book-room-id", "getBookByRoomID");
     Route::get("/get-book-history", "getBookHistory");
-    Route::post("/test-login", "testlogin");
 });

@@ -80,8 +80,7 @@ class  AdminController extends Controller
                 ], 400);
             }
             //! check password
-            $isPass = $user->Password == $request->Password;
-            // $isPass = $user->Bcrypt->verify($Password, $user->Password);
+            $isPass = $this->Bcrypt->verify($request->Password, $user->Password);
             if (!$isPass) {
                 return response()->json([
                     "state" => false,
@@ -111,7 +110,6 @@ class  AdminController extends Controller
             ], 500);
         }
     }
-
     //TODO [POST] /admin/re-password
     public function rePassword(Request $request)
     {
@@ -154,19 +152,22 @@ class  AdminController extends Controller
             //! Get user information & check old pasword
             $this->getUserInfo($request->Username);
             $users = DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->first();
-            $isPass = $request->oldPassword === $users->Password;
+            $isPass = $this->Bcrypt->verify($request->oldPassword, $users->Password);
             if (!$isPass) {
                 return response()->json([
                     "state" => false,
                     "msg" => "รหัสผ่านไม่ถูกต้อง",
+
                 ]);
             }
             //! Hash new password & Update to DB
-            DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->update(['Password' => $request->newPassword]);
+            $hash = $this->Bcrypt->hash($request->newPassword);
+            DB::table("Accounts")->where('AccountID', $jwt->decoded->AccountID)->update(['Password' => $hash]);
 
             return response()->json([
                 "state" => true,
                 "msg" => "แก้ไขรหัสผ่านสำเร็จ",
+                // "data" => $this->Bcrypt->hash("12346")
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -175,7 +176,6 @@ class  AdminController extends Controller
             ], 500);
         }
     }
-
     //TODO [GET] /admin/get-books-vip
     public function getBooksVIP(Request $request)
     {
@@ -370,57 +370,12 @@ class  AdminController extends Controller
             ], 500);
         }
     }
-    // //TODO [POST] /admin/test-login
-    // public function testlogin(Request $request)
+    // public function test()
     // {
     //     try {
-    //         $rules = [
-    //             "Username" => ["required", "string", "min:1"],
-    //             "Password" => ["required", "string", "min:1"],
-    //         ];
-
-    //         $validator = Validator::make($request->all(), $rules);
-    //         if ($validator->fails()) {
-    //             return response()->json([
-    //                 "state" => false,
-    //                 "msg" => "การระบุข้อมูลไม่ครบถ้วน",
-    //             ], 400);
-    //         }
-    //         //! Get users information
-    //         //! check user
-    //         $user = DB::table("Accounts")
-    //             ->where("Username", strtolower($request->Username))
-    //             ->first();
-    //         if (!$user) {
-    //             return response()->json([
-    //                 "state" => false,
-    //                 "msg" => "ไม่มีผู้ใช้งานในระบบ",
-    //             ], 400);
-    //         }
-    //         //! check password
-    //         $isPass = $user->Password == $request->Password;
-    //         // $isPass = $user->Bcrypt->verify($Password, $user->Password);
-    //         if (!$isPass) {
-    //             return response()->json([
-    //                 "state" => false,
-    //                 "msg" => "รหัสผ่านไม่ถูกต้อง",
-    //             ]);
-    //         }
-    //         //! Set payload & Encode JWT
-    //         date_default_timezone_set('Asia/Bangkok');
-    //         $now = new \DateTime();
-    //         $payload = [
-    //             'AccountID' => $user->AccountID,
-    //             'Name' => $user->Name,
-    //             'Username' => $user->Username,
-    //             'Role' => $user->Role,
-    //             'iat' => $now->getTimestamp(), //! generate token time
-    //             'exp' => $now->modify('+30 hours')->getTimestamp() //! expire token time
-    //         ];
-    //         $token = $this->jwtUtils->generateToken($payload);
-
+    //         $this->Line->sendMessage("มงคล");
     //         return response()->json([
-    //             "state" => true, "msg" => "เข้าสูระบบสำเร็จ", "token" => $token
+    //             "state" => true, "msg" => "test",
     //         ], 201);
     //     } catch (\Exception $e) {
     //         return response()->json([
@@ -429,19 +384,4 @@ class  AdminController extends Controller
     //         ], 500);
     //     }
     // }
-
-    public function test()
-    {
-        try {
-            $this->Line->sendMessage("มงคล");
-            return response()->json([
-                "state" => true, "msg" => "test",
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                "state" => false,
-                "msg" => $e->getMessage()
-            ], 500);
-        }
-    }
 }
