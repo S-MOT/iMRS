@@ -90,14 +90,15 @@ class  BookController extends Controller
             $endTimestamp = (new \DateTime($request->EndDatetime))->getTimestamp();
             $nowTimestamp = new \DateTime();
             //! S >= Now
-            if ($nowTimestamp->getTimestamp() >= $startTimestamp)
+
+            if ($nowTimestamp->getTimestamp() >= $startTimestamp) {
                 return response()->json([
                     "state" => false,
                     "msg"   => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
                 ]);
+            }
 
             $arrReserved = [];
-
             foreach ($reservedList as $reserved) {
 
                 $dbStartDatetime = isset($reserved->StartDatetime) ? $reserved->StartDatetime : null;
@@ -144,15 +145,14 @@ class  BookController extends Controller
                 "EndDatetime"    => $request->EndDatetime,
                 "Purpose"        => $request->Purpose,
                 "Action"         => 'booking',
-                "Status"         => $request->roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
+                "Status" => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
             ]);
-
             // //! Line Notify
-            $allReserved = $this->getRoomReserved($roomInfo->RoomID, $roomInfo->StartDatetime);
+            $allReserved = $this->getRoomReserved($request->RoomID, $request->StartDatetime);
             if ($roomInfo->RoomLevel != 'vip') {
 
                 $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
-                    . "วันที่ " . (new \DateTime($roomInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+                    . "วันที่ " . (new \DateTime($request->StartDatetime))->format('d/m/Y') . "\n\n"
                     . "คิวจองห้องประชุม\n";
 
                 foreach ($allReserved as $reserved) {
@@ -166,12 +166,11 @@ class  BookController extends Controller
                 return response()->json(["state" => true, "msg" => "เพิ่มการจองสำเร็จ", "lineMessage" => $lineMessage]);
             } else {
                 $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
-                    . "วันที่ " . (new \DateTime($roomInfo->StartDatetime))->format('d/m/Y') . "\n\n";
+                    . "วันที่ " . (new \DateTime($request->StartDatetime))->format('d/m/Y') . "\n\n";
 
                 foreach ($allReserved as $reserved) {
                     $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
                 }
-
                 $lineMessage .= "กรุณาอนุมัติการจองได้ที่ :\n";
                 $lineMessage .= "https://snc-services.sncformer.com/iMRS/IT/";
 
@@ -404,6 +403,7 @@ class  BookController extends Controller
                 ->where('BookID', $request->BookID)
                 ->first();
 
+
             $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
             $RoomLevel = "vip";
 
@@ -423,7 +423,6 @@ class  BookController extends Controller
             } else {
                 $this->Line->sendMessage($lineMessage);
             }
-
             return response()->json([
                 "state" => true,
                 "msg" => "แก้ไขการจองสำเร็จ",

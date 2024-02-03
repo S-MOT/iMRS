@@ -1,0 +1,470 @@
+{
+	"info": {
+		"_postman_id": "735b0ceb-6bb4-49ab-a443-6002eb01a734",
+		"name": "iMRS (api-v2)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32168546"
+	},
+	"item": [
+		{
+			"name": "Book",
+			"item": [
+				{
+					"name": "/api-v2/book/add-book",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"RoomID\": 2,\r\n    \"Name\": \" สถาพร นอนน้อย \",\r\n    \"Code\": \"6308002\",\r\n    \"Company\": \"SCAN\",\r\n    \"Tel\": \"-\",\r\n    \"StartDatetime\": \"2024-02-04 12:00:00\",\r\n    \"EndDatetime\": \"2024-02-04 15:00:00\",\r\n    \"Purpose\": \"จองไว้นอน\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/book/add-book",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"book",
+								"add-book"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/book/edit-book",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"BookID\": 3,\r\n    \"Name\": \"สถาพร นอนน้อย\",\r\n    \"Code\": \"6308002\",\r\n    \"Company\": \"SCAN\",\r\n    \"Tel\": \"0888888888\",\r\n    \"Purpose\": \"Reserve\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/book/edit-book",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"book",
+								"edit-book"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/book/cancel-book",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"BookID\": 3\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/book/cancel-book",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"book",
+								"cancel-book"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/book/get-book",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/book/get-book",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"book",
+								"get-book"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/book/get-book/($code)",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/book/get-book/0",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"book",
+								"get-book",
+								"0"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/book/get-book-room-id/($RoomID)",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/book/get-book-room-id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"book",
+								"get-book-room-id"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/book/get-book-history",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/book/get-book-history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"book",
+								"get-book-history"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Room",
+			"item": [
+				{
+					"name": "/api-v2/rooms-list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/room/rooms-list",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"room",
+								"rooms-list"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "/api-v2/admin/check-login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Username\": \"suriya\",\r\n    \"Password\": \"12347\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/check-login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"check-login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/admin/re-password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjk0MjQ4MSwiZXhwIjoxNzA3MDUwNDgxfQ.b0lBpVaYXz6HAl3DyYH5ibZKp4nnFQ3EVhEo6Jm5fW8",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"oldPassword\": \"12347\",\r\n    \"newPassword\": \"12348\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/re-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"re-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/admin/admin-approvement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjk0MjQ4MSwiZXhwIjoxNzA3MDUwNDgxfQ.b0lBpVaYXz6HAl3DyYH5ibZKp4nnFQ3EVhEo6Jm5fW8",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"BookID\": 3,\r\n    \"isApproved\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/admin-approvement",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"admin-approvement"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/admin/get-books-vip",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjk0MjQ4MSwiZXhwIjoxNzA3MDUwNDgxfQ.b0lBpVaYXz6HAl3DyYH5ibZKp4nnFQ3EVhEo6Jm5fW8",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/get-books-vip",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"get-books-vip"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/api-v2/admin/test-login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"Username\": \"aukawut\",\r\n    \"Password\": \"1111\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/test-login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"test-login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "test",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjc3MjMxNCwiZXhwIjoxNzA2ODgwMzE0fQ.QDbVyHRd-T7LKCKRmXQEpdPUj1NmF9V3qpnh8-zilZU",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/admin/test",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"test"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://snc-services.sncformer.com/imrs/api-v2/index.php",
+			"type": "string",
+			"disabled": true
+		},
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api",
+			"type": "string"
+		}
+	]
+}
