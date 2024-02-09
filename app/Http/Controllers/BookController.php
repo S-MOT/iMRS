@@ -142,7 +142,9 @@ class  BookController extends Controller
                 "EndDatetime"    => $request->EndDatetime,
                 "Purpose"        => $request->Purpose,
                 "Action"         => 'booking',
-                "Status"         => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'approved' : 'pending',
+                "Status"         => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved'
+                // ("Room Level: " . ($roomInfo ? $roomInfo->RoomLevel : "null"))
+
             ]);
             // //! Line Notify
             $allReserved = $this->getRoomReserved($request->RoomID, $request->StartDatetime);
