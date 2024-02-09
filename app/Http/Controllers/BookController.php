@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Libraries\JWT\JWT;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use App\Http\Libraries\JWT\JWTUtils;
-use App\Http\Libraries\JWT\Key;
 use App\Http\Libraries\LineNotify;
+
+
 
 // line group token: x0UK5hTkQCkQ57d32vxpIl0h2sTYpoiD4FSUg4TpN5Z
 class  BookController extends Controller
 {
     // private $BookModel;
+    private $BookModel;
     private $Line;
     private $LineVIPRequest;
     private $LineVIP;
@@ -97,7 +97,6 @@ class  BookController extends Controller
                     "msg"   => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
                 ]);
             }
-
             $arrReserved = [];
             foreach ($reservedList as $reserved) {
 
@@ -107,7 +106,6 @@ class  BookController extends Controller
                 if ($dbStartDatetime === null || $dbEndDatetime === null) {
                     continue;
                 }
-
                 $dbStartTimestamp = (new \DateTime($dbStartDatetime))->getTimestamp();
                 $dbEndTimestamp = (new \DateTime($dbEndDatetime))->getTimestamp();
                 if (
@@ -145,7 +143,7 @@ class  BookController extends Controller
                 "EndDatetime"    => $request->EndDatetime,
                 "Purpose"        => $request->Purpose,
                 "Action"         => 'booking',
-                "Status" => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
+                "Status"         => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
             ]);
             // //! Line Notify
             $allReserved = $this->getRoomReserved($request->RoomID, $request->StartDatetime);
@@ -173,11 +171,9 @@ class  BookController extends Controller
                 }
                 $lineMessage .= "กรุณาอนุมัติการจองได้ที่ :\n";
                 $lineMessage .= "https://snc-services.sncformer.com/iMRS/IT/";
-
                 $this->LineVIPRequest->sendMessage($lineMessage);
             }
             //! ./Line Notify
-
             return response()->json([
                 "state" => true,
                 "msg" => "เพิ่มการจองสำเร็จ",
@@ -186,6 +182,7 @@ class  BookController extends Controller
             return response()->json([
                 "state" => false,
                 "msg" => $e->getMessage(),
+                // "msg" => $reBooking
             ], 500);
         }
     }
@@ -212,7 +209,7 @@ class  BookController extends Controller
                     $start->modify('+30 minutes');
                 }
                 $row->DatetimeBlock = $datetimeBlock;
-                array_push($data, $row);
+                // array_push($data, $row);
             }
 
             return response()->json([], 201);
@@ -228,8 +225,6 @@ class  BookController extends Controller
     //! Not use
     public function getBookByRoomID($RoomID = null)
     {
-        $data = array(); // Initialize the $data array
-
         try {
             $query = DB::table("Booking")
                 ->select('*')
@@ -238,6 +233,7 @@ class  BookController extends Controller
                 ->where('Booking.Status', '=', 'approved')
                 ->where('Booking.RoomID', '=', $RoomID)
                 ->get();
+            $data = array();
 
             foreach ($query as $row) { // Removed ->getResult()
                 $start = new \DateTime($row->StartDatetime);
@@ -250,7 +246,6 @@ class  BookController extends Controller
                 $row->DatetimeBlock = $datetimeBlock;
                 array_push($data, $row);
             }
-
             return response()->json($data, 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -296,7 +291,6 @@ class  BookController extends Controller
                 ->get();
             return response()->json([
                 "state" => true,
-                "msg" => "แก้ไขรหัสผ่านสำเร็จ",
                 "data" => $result,
             ], 201);
         } catch (\Exception $e) {

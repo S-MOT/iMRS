@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 
-use App\Http\Libraries\JWT\JWT;
+// use App\Http\Libraries\JWT\JWT;
 use App\Http\Libraries\LineNotify;
 use App\Models\AdminModel;
 use App\Models\BookModel;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Libraries\Bcrypt;
 
 use App\Http\Libraries\JWT\JWTUtils;
-use App\Http\Libraries\JWT\Key;
+// use App\Http\Libraries\JWT\Key;
 
 class  AdminController extends Controller
 {
@@ -59,7 +59,6 @@ class  AdminController extends Controller
                 "Username" => ["required", "string", "min:1"],
                 "Password" => ["required", "string", "min:1"],
             ];
-
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json([
@@ -223,7 +222,6 @@ class  AdminController extends Controller
         }
     }
 
-
     //TODO [POST] /admin/admin-approvement
     public function adminApprovement(Request $request)
     {
@@ -370,18 +368,4 @@ class  AdminController extends Controller
             ], 500);
         }
     }
-    // public function test()
-    // {
-    //     try {
-    //         $this->Line->sendMessage("มงคล");
-    //         return response()->json([
-    //             "state" => true, "msg" => "test",
-    //         ], 201);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             "state" => false,
-    //             "msg" => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 }

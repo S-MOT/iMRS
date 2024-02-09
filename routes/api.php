@@ -6,7 +6,6 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\RoomController;
 
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -27,12 +26,12 @@ Route::prefix("admin")->controller(AdminController::class)->group(function () {
     Route::post("/re-password", "rePassword");
     Route::get("/get-books-vip", "getBooksVIP");
     Route::post("/admin-approvement", "adminApprovement");
-    // Route::get("/test", "test");
 });
 
 Route::prefix("room")->controller(RoomController::class)->group(function () {
     Route::get("/rooms-list", "roomsList");
 });
+
 Route::prefix("book")->controller(BookController::class)->group(function () {
     Route::post("/add-book", "addBook");
     Route::post("/edit-book", "editBook");
