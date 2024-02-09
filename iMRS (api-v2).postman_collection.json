@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"RoomID\": 2,\r\n    \"Name\": \" สถาพร นอนน้อย \",\r\n    \"Code\": \"6308002\",\r\n    \"Company\": \"SCAN\",\r\n    \"Tel\": \"-\",\r\n    \"StartDatetime\": \"2024-02-04 12:00:00\",\r\n    \"EndDatetime\": \"2024-02-04 15:00:00\",\r\n    \"Purpose\": \"จองไว้นอน\"\r\n}",
+							"raw": "{\r\n    \"RoomID\":18,\r\n    \"Name\":\"สถาพร นอนน้อย\",\r\n    \"Code\":\"6308002\",\r\n    \"Company\":\"SCAN\",\r\n    \"Tel\":\"-\",\r\n    \"StartDatetime\":\"2024-02-09 17:00:00\",\r\n    \"EndDatetime\":\"2024-02-09 18:00:00\",\r\n    \"Purpose\":\"จองไว้นอน\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -43,7 +43,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"BookID\": 3,\r\n    \"Name\": \"สถาพร นอนน้อย\",\r\n    \"Code\": \"6308002\",\r\n    \"Company\": \"SCAN\",\r\n    \"Tel\": \"0888888888\",\r\n    \"Purpose\": \"Reserve\"\r\n}",
+							"raw": "{\r\n    \"BookID\": 1,\r\n    \"Name\": \"สถาพร นอนน้อย\",\r\n    \"Code\": \"6308002\",\r\n    \"Company\": \"SEREN\",\r\n    \"Tel\": \"0888888888\",\r\n    \"Purpose\": \"Reserve\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -70,7 +70,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"BookID\": 3\r\n}",
+							"raw": "{\r\n    \"BookID\":6371\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -138,14 +138,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/book/get-book/0",
+							"raw": "{{base_url}}/book/get-book/6506025",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"book",
 								"get-book",
-								"0"
+								"6506025"
 							]
 						}
 					},
@@ -241,12 +241,36 @@
 			"item": [
 				{
 					"name": "/api-v2/admin/check-login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// const { data: x } = pm.response.json();\r",
+									"// if (x.length > 0) {\r",
+									"//     const [{ token }] = x;\r",
+									"//     pm.collectionVariables.set(\"auth_token\", `Bearer ${token}`);\r",
+									"// }\r",
+									"// const { data: x } = pm.response.json();\r",
+									"// if (x && x.length > 0) {\r",
+									"//     const [{ token }] = x;\r",
+									"//     pm.collectionVariables.set(\"auth_token\", `Bearer ${token}`);\r",
+									"// }\r",
+									"\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"Username\": \"suriya\",\r\n    \"Password\": \"12347\"\r\n}",
+							"raw": "{\r\n    \"Username\": \"suriya\",\r\n    \"Password\": \"6408448\"\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -273,13 +297,13 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjk0MjQ4MSwiZXhwIjoxNzA3MDUwNDgxfQ.b0lBpVaYXz6HAl3DyYH5ibZKp4nnFQ3EVhEo6Jm5fW8",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjcsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNzQ0NDkwOCwiZXhwIjoxNzA3NTUyOTA4fQ.HBevVAAVm2hAw6OnAwuE6b6NVAY64boPqvKY0HZxN5Q",
 								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"oldPassword\": \"12347\",\r\n    \"newPassword\": \"12348\"\r\n}",
+							"raw": "{\r\n    \"oldPassword\": \"6408449\",\r\n    \"newPassword\": \"6408448\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -306,13 +330,13 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjk0MjQ4MSwiZXhwIjoxNzA3MDUwNDgxfQ.b0lBpVaYXz6HAl3DyYH5ibZKp4nnFQ3EVhEo6Jm5fW8",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjcsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNzQ0NTEzNSwiZXhwIjoxNzA3NTUzMTM1fQ.YXtI9PO7OIEj5DMHhLNkRxOwoZT40m8pq9sr0zQB_Q8",
 								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"BookID\": 3,\r\n    \"isApproved\": true\r\n}",
+							"raw": "{\r\n    \"BookID\": 2146,\r\n    \"isApproved\": true\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -342,7 +366,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjk0MjQ4MSwiZXhwIjoxNzA3MDUwNDgxfQ.b0lBpVaYXz6HAl3DyYH5ibZKp4nnFQ3EVhEo6Jm5fW8",
+								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjcsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNzQ0NTEzNSwiZXhwIjoxNzA3NTUzMTM1fQ.YXtI9PO7OIEj5DMHhLNkRxOwoZT40m8pq9sr0zQB_Q8",
 								"type": "text"
 							}
 						],
@@ -363,69 +387,6 @@
 							"path": [
 								"admin",
 								"get-books-vip"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/api-v2/admin/test-login",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"Username\": \"aukawut\",\r\n    \"Password\": \"1111\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/test-login",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"test-login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "test",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJBY2NvdW50SUQiOjYsIk5hbWUiOiJTdXJpeWEiLCJVc2VybmFtZSI6InN1cml5YSIsIlJvbGUiOiJhZG1pbiIsImlhdCI6MTcwNjc3MjMxNCwiZXhwIjoxNzA2ODgwMzE0fQ.QDbVyHRd-T7LKCKRmXQEpdPUj1NmF9V3qpnh8-zilZU",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}/admin/test",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"admin",
-								"test"
 							]
 						}
 					},
@@ -460,6 +421,11 @@
 			"value": "https://snc-services.sncformer.com/imrs/api-v2/index.php",
 			"type": "string",
 			"disabled": true
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
 		},
 		{
 			"key": "base_url",
