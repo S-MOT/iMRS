@@ -211,7 +211,7 @@ class  AdminController extends Controller
 
             return response()->json([
                 "state" => true,
-                "msg" => "แก้ไขรหัสผ่านสำเร็จ",
+                "msg" => "ร้องขอข้อมูลสำเร็จ",
                 "data" => $result,
             ], 201);
         } catch (\Exception $e) {

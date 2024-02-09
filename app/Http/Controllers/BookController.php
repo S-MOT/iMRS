@@ -53,7 +53,6 @@ class  BookController extends Controller
             ->get();
         return count($data) > 0;
     }
-
     //TODO [POST] /book/add-book
     public function addBook(Request $request)
     {
@@ -143,7 +142,7 @@ class  BookController extends Controller
                 "EndDatetime"    => $request->EndDatetime,
                 "Purpose"        => $request->Purpose,
                 "Action"         => 'booking',
-                "Status"         => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved',
+                "Status"         => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'approved' : 'pending',
             ]);
             // //! Line Notify
             $allReserved = $this->getRoomReserved($request->RoomID, $request->StartDatetime);
@@ -182,11 +181,9 @@ class  BookController extends Controller
             return response()->json([
                 "state" => false,
                 "msg" => $e->getMessage(),
-                // "msg" => $reBooking
             ], 500);
         }
     }
-
     //TODO [GET] /book/get-book
     public function getBook()
     {
@@ -220,7 +217,6 @@ class  BookController extends Controller
             ], 500);
         }
     }
-
     //TODO [GET] /book/get-book-room-id
     //! Not use
     public function getBookByRoomID($RoomID = null)
@@ -235,7 +231,7 @@ class  BookController extends Controller
                 ->get();
             $data = array();
 
-            foreach ($query as $row) { // Removed ->getResult()
+            foreach ($query as $row) {
                 $start = new \DateTime($row->StartDatetime);
                 $end = new \DateTime($row->EndDatetime);
                 $datetimeBlock = array();
@@ -254,7 +250,6 @@ class  BookController extends Controller
             ], 500);
         }
     }
-
     //TODO [GET] /book/get-book-history
     public function getBookHistory()
     {
@@ -276,7 +271,6 @@ class  BookController extends Controller
             ], 500);
         }
     }
-
     //TODO [GET] /book/get-book/($code)
     public function getBookByCode($code = null)
     {
@@ -307,7 +301,7 @@ class  BookController extends Controller
             $rules = [
                 "BookID"    => ["required", "int"],
                 "Name"      => ["required", "string", "min:1"],
-                "Code"      => ["required", "string"],
+                "Code"      => ["required", "string", "min:7"],
                 "Company"   => ["required", "string", "min:1"],
                 "Tel"       => ["required", "string", "min:1"],
                 "Purpose"   => ["required", "string", "min:1"],
@@ -320,33 +314,26 @@ class  BookController extends Controller
                     "msg"   => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
-            $BookID = $request->input('BookID');
-            $Name = $request->input('Name');
-            $Code = $request->input('Code');
-            $Company = $request->input('Company');
-            $Tel = $request->input('Tel');
-            $Purpose = $request->input('Purpose');
+            // $BookID = $request->input('BookID');
+            // $Name = $request->input('Name');
+            // $Code = $request->input('Code');
+            // $Company = $request->input('Company');
+            // $Tel = $request->input('Tel');
+            // $Purpose = $request->input('Purpose');
 
-            $affectedRows = DB::table('Booking')->where('BookID', $BookID)->update([
-                'Name'    => $Name,
-                'Code'    => $Code,
-                'Company' => $Company,
-                'Tel'     => $Tel,
-                'Purpose' => $Purpose,
-            ]);
+            // $affectedRows = DB::table('Booking')->where('BookID', $BookID)->update([
+            //     'Name'    => $Name,
+            //     'Code'    => $Code,
+            //     'Company' => $Company,
+            //     'Tel'     => $Tel,
+            //     'Purpose' => $Purpose,
+            // ]);
 
-            if (!$this->checkEditCode($BookID, $Code))
+            if (!$this->checkEditCode($request->BookID, $request->Code))
                 return response()->json([
                     "state" => false,
                     "msg" => "รหัสการยืนยันไม่ถูกต้อง"
                 ]);
-
-            if ($affectedRows === 0) {
-                return response()->json([
-                    "state" => false,
-                    "msg"   => "ไม่พบข้อมูลการจอง",
-                ], 404);
-            }
 
             return response()->json([
                 "state" => true,
@@ -359,7 +346,6 @@ class  BookController extends Controller
             ], 500);
         }
     }
-
 
     //TODO [POST] /book/cancel-book
     public function cancelBook(Request $request)
@@ -396,7 +382,6 @@ class  BookController extends Controller
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
                 ->where('BookID', $request->BookID)
                 ->first();
-
 
             $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
             $RoomLevel = "vip";
