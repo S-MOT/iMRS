@@ -28,10 +28,10 @@ class  AdminController extends Controller
         $this->Bcrypt = new Bcrypt(10);
         $this->AdminModel = new AdminModel();
         $this->BookModel = new BookModel();
-        $this->Line = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS
+        // $this->Line = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS
+        $this->Line = new LineNotify('z2BejJ5rgd0iSDCPaF3JIB6pmodF0IDukPTGxJA4lau'); //? Line Token VIP MRS
         $this->jwtUtils = new JWTUtils();
     }
-
     private function getUserInfo($Username)
     {
         $users = $this->AdminModel->where('Username', $Username)->first();
@@ -45,7 +45,7 @@ class  AdminController extends Controller
             ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
             ->where('Rooms.RoomID', "=", $RoomID)
             ->whereDate('StartDatetime', '=', date('Y-m-d', strtotime($StartDatetime)))
-            ->where('Action', '=', 'booking')
+            ->where('Action', '=', 'Booking')
             ->where('Status', '=', 'approved')
             ->get();
         return $query;
@@ -98,9 +98,10 @@ class  AdminController extends Controller
                 'exp' => $now->modify('+30 hours')->getTimestamp() //! expire token time
             ];
             $token = $this->jwtUtils->generateToken($payload);
-
             return response()->json([
-                "state" => true, "msg" => "เข้าสูระบบสำเร็จ", "token" => $token
+                "state" => true, "msg" =>
+                "เข้าสูระบบสำเร็จ",
+                "token" => $token
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -331,7 +332,7 @@ class  AdminController extends Controller
             // //! ./Block Reserve exist
             //! Update Action & Status
             $data = [
-                'Action' => $request->isApproved ? "booking" : "canceled",
+                'Action' => $request->isApproved ? "Booking" : "canceled",
                 'Status' => $request->isApproved ? "approved" : "canceled"
             ];
 

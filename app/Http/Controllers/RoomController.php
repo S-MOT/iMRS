@@ -18,11 +18,16 @@ class RoomController extends BaseController
      public function roomsList()
      {
           try {
-               $data = DB::table('Rooms')->orderBy('RoomID', 'DESC')->get();
-               return response()->json($data);
+               $data = DB::table('rooms')->orderBy('RoomID', 'DESC')->get();
+               return response()->json([
+                    "state" => true,
+                    "msg" => "get rooms list successfully",
+                    "data" => $data,
+               ], 200);
           } catch (\Exception $e) {
                return response()->json([
-                    'error' => $e->getMessage()
+                    "state" => false,
+                    "msg" => $e->getMessage(),
                ], 500);
           }
      }

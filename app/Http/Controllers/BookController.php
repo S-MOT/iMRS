@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Http\Libraries\LineNotify;
-
 
 
 // line group token: x0UK5hTkQCkQ57d32vxpIl0h2sTYpoiD4FSUg4TpN5Z
@@ -22,9 +20,12 @@ class  BookController extends Controller
     public function __construct()
     {
         // $this->BookModel = new BookModel();
-        $this->Line = new LineNotify('sCkhQ307rX0KCwsXj9uWK3C067ek5BQw0e4R050FWLm'); //! Line Token General room (test iMRS2)
-        $this->LineVIPRequest = new LineNotify('Meeh3Fg2rrgrv75Z3pXEAEGjxBCdshzCVyEJkh831LM'); //! Line Token VIP Request room (VIP)
-        $this->LineVIP = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS (MRS)s
+        // $this->Line = new LineNotify('sCkhQ307rX0KCwsXj9uWK3C067ek5BQw0e4R050FWLm'); //! Line Token General room (test iMRS2)
+        $this->Line = new LineNotify('0wc1OH8c3XZk9hfyxIgsF36zWWJgr9FKBYbA1yqehoV'); //? Line Token General room (test iMRS2)
+        // $this->LineVIPRequest = new LineNotify('Meeh3Fg2rrgrv75Z3pXEAEGjxBCdshzCVyEJkh831LM'); //! Line Token VIP Request room (VIP)
+        $this->LineVIPRequest = new LineNotify('wR1pDVzKLyZunYOzTaGNowkLfp8Bheyvo7TZEI5YEqv'); //? Line Token VIP Request room (VIP)
+        // $this->LineVIP = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS (MRS)s
+        $this->LineVIP = new LineNotify('z2BejJ5rgd0iSDCPaF3JIB6pmodF0IDukPTGxJA4lau'); //? Line Token VIP MRS (MRS)s
     }
     private function checkRoom($RoomID)
     {
@@ -40,7 +41,7 @@ class  BookController extends Controller
             ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
             ->where('Rooms.RoomID', "=", $RoomID)
             ->whereDate('StartDatetime', '=', date('Y-m-d', strtotime($StartDatetime)))
-            ->where('Action', '=', 'booking')
+            ->where('Action', '=', 'Booking')
             ->where('Status', '=', 'approved')
             ->get();
         return $query;
@@ -141,9 +142,19 @@ class  BookController extends Controller
                 "StartDatetime"  => $request->StartDatetime,
                 "EndDatetime"    => $request->EndDatetime,
                 "Purpose"        => $request->Purpose,
-                "Action"         => 'booking',
+                "Action"         => 'Booking',
                 "Status"         => $roomInfo && $roomInfo->RoomLevel == 'vip' ? 'pending' : 'approved'
+
                 // ("Room Level: " . ($roomInfo ? $roomInfo->RoomLevel : "null"))
+
+                // "RoomID"        => ["required", "int", "min:1"],
+                // "Name"          => ["required", "string", "min:1"],
+                // "Code"          => ["required", "string", "min:7"],
+                // "Company"       => ["required", "string", "min:2"],
+                // "Tel"           => ["required", "string", "min:1"],
+                // "StartDatetime" => ["required", "date",],
+                // "EndDatetime"   => ["required", "date",],
+                // "Purpose"       => ["required", "string", "min:1"],
 
             ]);
             // //! Line Notify
@@ -194,7 +205,7 @@ class  BookController extends Controller
                 ->select('*')
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
                 ->where('EndDatetime', '>=', now())
-                ->where('Action', '=', 'booking')
+                ->where('Action', '=', 'Booking')
                 ->where('Status', '=', 'approved')
                 ->get();
 
@@ -210,8 +221,10 @@ class  BookController extends Controller
                 $row->DatetimeBlock = $datetimeBlock;
                 // array_push($data, $row);
             }
-
-            return response()->json([], 201);
+            return response()->json([
+                "state" => true,
+                "data" => $result,
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
@@ -244,7 +257,10 @@ class  BookController extends Controller
                 $row->DatetimeBlock = $datetimeBlock;
                 array_push($data, $row);
             }
-            return response()->json($data, 201);
+            return response()->json([
+                "state" => true,
+                "data" => $data,
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
@@ -282,7 +298,7 @@ class  BookController extends Controller
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
                 ->where('Booking.Code', '=', $code)
                 ->where('Booking.StartDatetime', '>=', DB::raw('NOW()'))
-                ->where('Booking.Action', '=', 'booking')
+                ->where('Booking.Action', '=', 'Booking')
                 ->where('Booking.Status', '=', 'approved')
                 ->get();
             return response()->json([
@@ -296,7 +312,7 @@ class  BookController extends Controller
             ], 500);
         }
     }
-    //TODO [POST] /book/edit-book
+    //TODO [POST] /book/edit-book ////////////*////////////////// edit 
     public function editBook(Request $request)
     {
         try {
@@ -316,31 +332,22 @@ class  BookController extends Controller
                     "msg"   => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
-            // $BookID = $request->input('BookID');
-            // $Name = $request->input('Name');
-            // $Code = $request->input('Code');
-            // $Company = $request->input('Company');
-            // $Tel = $request->input('Tel');
-            // $Purpose = $request->input('Purpose');
 
-            // $affectedRows = DB::table('Booking')->where('BookID', $BookID)->update([
-            //     'Name'    => $Name,
-            //     'Code'    => $Code,
-            //     'Company' => $Company,
-            //     'Tel'     => $Tel,
-            //     'Purpose' => $Purpose,
-            // ]);
-
-            if (!$this->checkEditCode($request->BookID, $request->Code))
-                return response()->json([
-                    "state" => false,
-                    "msg" => "รหัสการยืนยันไม่ถูกต้อง"
+            DB::table('Booking')
+                ->where('BookID', $request->BookID)
+                ->update([
+                    "Name"      => $request->Name,
+                    "Code"      => $request->Code,
+                    "Company"   => $request->Company,
+                    "Tel"       => $request->Tel,
+                    "Purpose"   => $request->Purpose,
                 ]);
 
             return response()->json([
                 "state" => true,
                 "msg"   => "แก้ไขการจองสำเร็จ",
-            ], 200);
+                "data"  => $request->all(),
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
@@ -349,11 +356,11 @@ class  BookController extends Controller
         }
     }
 
+
     //TODO [POST] /book/cancel-book
     public function cancelBook(Request $request)
     {
         try {
-
             $rules = [
                 "BookID" => ["required", "int", "min:1"],
             ];
