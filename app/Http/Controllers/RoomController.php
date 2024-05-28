@@ -18,7 +18,7 @@ class RoomController extends BaseController
      public function roomsList()
      {
           try {
-               $data = DB::table('rooms')->orderBy('RoomID', 'DESC')->get();
+               $data = DB::table('Rooms')->orderBy('RoomID', 'DESC')->get();
                return response()->json([
                     "state" => true,
                     "msg" => "get rooms list successfully",

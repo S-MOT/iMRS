@@ -358,14 +358,79 @@ class  BookController extends Controller
 
 
     //TODO [POST] /book/cancel-book
+    // public function cancelBook(Request $request)
+    // {
+    //     try {
+    //         $rules = [
+    //             "BookID" => ["required", "int", "min:1"],
+    //         ];
+
+    //         //! ./Request Validation
+    //         $validator = Validator::make($request->all(), $rules);
+    //         if ($validator->fails()) {
+    //             return response()->json([
+    //                 "state" => false,
+    //                 "msg" => "การระบุข้อมูลไม่ครบถ้วน",
+    //             ], 400);
+    //         }
+    //         //! ./Request Validation
+
+    //         $result = DB::table("Booking")
+    //             ->select('*')
+    //             ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
+    //             ->where('BookID', '=', $request->BookID)
+    //             ->where('Booking.Status', '=', 'approved')
+    //             ->get();
+
+    //         DB::table('Booking')
+    //             ->where('BookID', $request->BookID)
+    //             ->update(['Action' => 'cancel']);
+
+    //         $BookInfo = DB::table('Booking')
+    //             ->select('*')
+    //             ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
+    //             ->where('BookID', $request->BookID)
+    //             ->first();
+
+    //         $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
+    //         $RoomLevel = "vip";
+
+    //         $lineMessage = "\n" . $BookInfo->RoomName . " (" . $BookInfo->Amount . " ที่นั่ง)\n"
+    //             . "วันที่ " . (new \DateTime($BookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+    //             . "คิวจองห้องประชุม\n";
+
+    //         foreach ($allReserved as $reserved) {
+    //             $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
+    //         }
+    //         $lineMessage .= "\n";
+    //         $lineMessage .= "ต้องการจองห้องประชุม\n";
+    //         $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
+
+    //         if ($RoomLevel == 'vip') {
+    //             $this->LineVIP->sendMessage($lineMessage);
+    //         } else {
+    //             $this->Line->sendMessage($lineMessage);
+    //         }
+    //         return response()->json([
+    //             "state" => true,
+    //             "msg" => "แก้ไขการจองสำเร็จ",
+    //             "data" => $result,
+    //         ], 201);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             "state" => false,
+    //             "msg" => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+    //TODO [POST] /book/cancel-book ////////////*////////////////// edit 
     public function cancelBook(Request $request)
     {
         try {
             $rules = [
-                "BookID" => ["required", "int", "min:1"],
+                "BookID" => ["required", "integer", "min:1"],
             ];
-
-            //! ./Request Validation
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 return response()->json([
@@ -373,50 +438,53 @@ class  BookController extends Controller
                     "msg" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
-            //! ./Request Validation
 
-            $result = DB::table("Booking")
-                ->select('*')
+            $bookInfo = DB::table("Booking")
+                ->select('Booking.*', 'Rooms.RoomName', 'Rooms.Amount')
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
                 ->where('BookID', '=', $request->BookID)
                 ->where('Booking.Status', '=', 'approved')
-                ->get();
+                ->first();
+
+            if (!$bookInfo) {
+                return response()->json([
+                    "state" => false,
+                    "msg" => "ไม่พบการจองหรือสถานะไม่ถูกต้อง",
+                ], 404);
+            }
 
             DB::table('Booking')
                 ->where('BookID', $request->BookID)
                 ->update(['Action' => 'cancel']);
 
-            $BookInfo = DB::table('Booking')
-                ->select('*')
-                ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
-                ->where('BookID', $request->BookID)
-                ->first();
-
-            $allReserved = $this->getRoomReserved($BookInfo->RoomID, $BookInfo->StartDatetime);
+            $allReserved = $this->getRoomReserved($bookInfo->RoomID, $bookInfo->StartDatetime);
             $RoomLevel = "vip";
 
-            $lineMessage = "\n" . $BookInfo->RoomName . " (" . $BookInfo->Amount . " ที่นั่ง)\n"
-                . "วันที่ " . (new \DateTime($BookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
-                . "คิวจองห้องประชุม\n";
+            $lineMessage = "\n" . $bookInfo->RoomName . " (" . $bookInfo->Amount . " ที่นั่ง)\n"
+                . "วันที่ " . (new \DateTime($bookInfo->StartDatetime))->format('d/m/Y') . "\n\n"
+                . "จองห้องประชุม\n";
 
             foreach ($allReserved as $reserved) {
-                $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - " . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
+                $lineMessage .= (new \DateTime($reserved->StartDatetime))->format('H:i') . " - "
+                    . (new \DateTime($reserved->EndDatetime))->format('H:i') . " น. (" . $reserved->Name . ")\n";
             }
-            $lineMessage .= "\n";
-            $lineMessage .= "ต้องการจองห้องประชุม\n";
-            $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
+            $lineMessage .= "\nยกเลิกการจองห้อง\nhttps://snc-services.sncformer.com/SncOneWay/";
 
             if ($RoomLevel == 'vip') {
                 $this->LineVIP->sendMessage($lineMessage);
             } else {
                 $this->Line->sendMessage($lineMessage);
             }
+
+            DB::commit();
+
             return response()->json([
                 "state" => true,
-                "msg" => "แก้ไขการจองสำเร็จ",
-                "data" => $result,
+                "msg" => "ยกเลิกการจองสำเร็จ",
+                "data" => $bookInfo,
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 "state" => false,
                 "msg" => $e->getMessage()
