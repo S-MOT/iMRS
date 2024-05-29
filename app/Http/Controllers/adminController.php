@@ -29,7 +29,7 @@ class  AdminController extends Controller
         $this->AdminModel = new AdminModel();
         $this->BookModel = new BookModel();
         // $this->Line = new LineNotify('XLsFGUlUT0NavSIIvVaQAn4F71xLaiWI8wkrs2E8PLc'); //! Line Token VIP MRS
-        $this->Line = new LineNotify('z2BejJ5rgd0iSDCPaF3JIB6pmodF0IDukPTGxJA4lau'); //? Line Token VIP MRS
+        $this->Line = new LineNotify('z2BejJ5rgd0iSDCPaF3JIB6pmodF0IDukPTGxJA4lau'); //? Line Token VIP MRS test 
         $this->jwtUtils = new JWTUtils();
     }
     private function getUserInfo($Username)
@@ -51,7 +51,7 @@ class  AdminController extends Controller
         return $query;
     }
 
-    //TODO [POST] /check-login
+    //TODO [POST] /check-login ///////////////////////////check pass
     public function checkLogin(Request $request)
     {
         try {
@@ -99,8 +99,8 @@ class  AdminController extends Controller
             ];
             $token = $this->jwtUtils->generateToken($payload);
             return response()->json([
-                "state" => true, "msg" =>
-                "เข้าสูระบบสำเร็จ",
+                "state" => true,
+                "msg" => "เข้าสูระบบสำเร็จ",
                 "token" => $token
             ], 201);
         } catch (\Exception $e) {
