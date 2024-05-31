@@ -20,14 +20,11 @@ class RoomController extends BaseController
           try {
                $data = DB::table('Rooms')->orderBy('RoomID', 'DESC')->get();
                return response()->json([
-                    "state" => true,
-                    "msg" => "get rooms list successfully",
-                    "data" => $data,
+                    $data,
                ], 200);
           } catch (\Exception $e) {
                return response()->json([
-                    "state" => false,
-                    "msg" => $e->getMessage(),
+                    "error" => $e->getMessage(),
                ], 500);
           }
      }

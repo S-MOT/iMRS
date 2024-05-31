@@ -195,14 +195,12 @@ class  AdminController extends Controller
                 "msg" => "Header[Authorization] ผิดพลาด",
             ], 400);
 
-
             //! Decode token to payload
             if ($jwt->decoded->Role != 'admin')
                 return response()->json([
                     "state" => false,
                     "msg" => "ไม่มีสิทธิ์การร้องขอข้อมูลนี้"
                 ], 400);
-
 
             $result = DB::table("Booking")
                 ->select('Booking.*')
@@ -211,9 +209,7 @@ class  AdminController extends Controller
                 ->get();
 
             return response()->json([
-                "state" => true,
-                "msg" => "ร้องขอข้อมูลสำเร็จ",
-                "data" => $result,
+                $result,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -360,7 +356,6 @@ class  AdminController extends Controller
             return response()->json([
                 "state" => true,
                 "msg" =>  $request->isApproved ? "อนุมัติการจองห้องประชุมสำเร็จ" : "ยกเลิกการจองห้องประชุมสำเร็จ",
-                "data" => []
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
