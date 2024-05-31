@@ -73,7 +73,7 @@ class  BookController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     "state" => false,
-                    "msg" => "การระบุข้อมูลไม่ครบถ้วน",
+                    "error" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
             //! Block Reserve exist
@@ -93,7 +93,7 @@ class  BookController extends Controller
             if ($nowTimestamp->getTimestamp() >= $startTimestamp) {
                 return response()->json([
                     "state" => false,
-                    "msg"   => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
+                    "error"   => "ไม่สามารถจองห้องประชุมย้อนหลังได้"
                 ]);
             }
             $arrReserved = [];
@@ -124,7 +124,7 @@ class  BookController extends Controller
             if (count($arrReserved) > 0) {
                 return response()->json([
                     "state" => false,
-                    "msg" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
+                    "error" => "ห้องประชุมนี้ได้ถูกจองไว้แล้วในช่วงเวลานี้",
                 ], 400);
             }
             // //! ./Block Reverse exist
@@ -160,7 +160,7 @@ class  BookController extends Controller
                 $lineMessage .= "https://snc-services.sncformer.com/SncOneWay/";
                 $this->Line->sendMessage($lineMessage);
 
-                return response()->json(["state" => true, "msg" => "เพิ่มการจองสำเร็จ", "lineMessage" => $lineMessage]);
+                return response()->json(["state" => true, "error" => "เพิ่มการจองสำเร็จ", "lineMessage" => $lineMessage]);
             } else {
                 $lineMessage = "\n" . $roomInfo->RoomName . " (" . $roomInfo->Amount . " ที่นั่ง)\n"
                     . "วันที่ " . (new \DateTime($request->StartDatetime))->format('d/m/Y') . "\n\n";
@@ -172,7 +172,6 @@ class  BookController extends Controller
                 $lineMessage .= "https://snc-services.sncformer.com/iMRS/IT/";
                 $this->LineVIPRequest->sendMessage($lineMessage);
             }
-            //! ./Line Notify
             return response()->json([
                 "state" => true,
                 "msg" => "เพิ่มการจองสำเร็จ",
@@ -180,7 +179,7 @@ class  BookController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
-                "msg" => $e->getMessage(),
+                "error" => $e->getMessage(),
             ], 500);
         }
     }
@@ -209,18 +208,17 @@ class  BookController extends Controller
                 // array_push($data, $row);
             }
             return response()->json([
-                "state" => true,
-                "data" => $result,
+                $result,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
-                "msg" => $e->getMessage()
+                "error" => $e->getMessage()
             ], 500);
         }
     }
-    //TODO [GET] /book/get-book-room-id           //////////*////////////////// check
-    public function getBookByRoomID($RoomID = null)
+    //!! [GET] /book/get-book-room-id         *////////////////// NOT USE
+    public function getBookByRoomID()
     {
         try {
             $query = DB::table("Booking")
@@ -228,7 +226,7 @@ class  BookController extends Controller
                 ->leftJoin('Rooms', 'Booking.RoomID', '=', 'Rooms.RoomID')
                 ->where('Booking.EndDatetime', '>=', now())
                 ->where('Booking.Status', '=', 'approved')
-                ->where('Booking.RoomID', '=', $RoomID)
+                // ->where('Booking.RoomID', '=', $RoomID)
                 ->get();
             $data = array();
 
@@ -243,17 +241,16 @@ class  BookController extends Controller
                 $row->DatetimeBlock = $datetimeBlock;
                 array_push($data, $row);
             }
-            return response()->json([
-                "state" => true,
-                "data" => $data,
-            ], 201);
+
+            return response()->json([$data], 201);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
-                "msg" => $e->getMessage()
+                "error" => $e->getMessage()
             ], 500);
         }
     }
+
     //TODO [GET] /book/get-book-history 
     public function getBookHistory()
     {
@@ -264,14 +261,11 @@ class  BookController extends Controller
                 ->orderByDesc('BookID')
                 ->take(50)
                 ->get();
-            return response()->json([
-                "state" => true,
-                "data" => $result,
-            ], 201);
+            return response()->json([$result], 201);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
-                "msg" => $e->getMessage()
+                "error" => $e->getMessage()
             ], 500);
         }
     }
@@ -287,14 +281,11 @@ class  BookController extends Controller
                 ->where('Booking.Action', '=', 'booking')
                 ->where('Booking.Status', '=', 'approved')
                 ->get();
-            return response()->json([
-                "state" => true,
-                "data" => $result,
-            ], 201);
+            return response()->json([$result], 201);
         } catch (\Exception $e) {
             return response()->json([
                 "state" => false,
-                "msg" => $e->getMessage()
+                "error" => $e->getMessage()
             ], 500);
         }
     }
@@ -315,7 +306,7 @@ class  BookController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     "state" => false,
-                    "msg"   => "การระบุข้อมูลไม่ครบถ้วน",
+                    "error"   => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
 
@@ -330,14 +321,14 @@ class  BookController extends Controller
                 ]);
 
             return response()->json([
+                $request->all(),
                 "state" => true,
                 "msg"   => "แก้ไขการจองสำเร็จ",
-                "data"  => $request->all(),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                "state" => false,
-                "msg"   => $e->getMessage(),
+                "state"   => false,
+                "error"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -353,7 +344,7 @@ class  BookController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     "state" => false,
-                    "msg" => "การระบุข้อมูลไม่ครบถ้วน",
+                    "error" => "การระบุข้อมูลไม่ครบถ้วน",
                 ], 400);
             }
             $bookInfo = DB::table("Booking")
@@ -366,7 +357,7 @@ class  BookController extends Controller
             if (!$bookInfo) {
                 return response()->json([
                     "state" => false,
-                    "msg" => "ไม่พบการจองหรือสถานะไม่ถูกต้อง",
+                    "error" => "ไม่พบการจองหรือสถานะไม่ถูกต้อง",
                 ], 404);
             }
 
@@ -396,15 +387,15 @@ class  BookController extends Controller
             DB::commit();
 
             return response()->json([
+                $bookInfo,
                 "state" => true,
-                "msg" => "ยกเลิกการจองสำเร็จ",
-                "data" => $bookInfo,
+                "error" => "ยกเลิกการจองสำเร็จ",
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 "state" => false,
-                "msg" => $e->getMessage()
+                "error" => $e->getMessage()
             ], 500);
         }
     }
@@ -421,7 +412,7 @@ class  BookController extends Controller
     //         if ($validator->fails()) {
     //             return response()->json([
     //                 "state" => false,
-    //                 "msg" => "การระบุข้อมูลไม่ครบถ้วน",
+    //                 "error" => "การระบุข้อมูลไม่ครบถ้วน",
     //             ], 400);
     //         }
     //         //! ./Request Validation
@@ -464,13 +455,13 @@ class  BookController extends Controller
     //         }
     //         return response()->json([
     //             "state" => true,
-    //             "msg" => "แก้ไขการจองสำเร็จ",
+    //             "error" => "แก้ไขการจองสำเร็จ",
     //             "data" => $result,
     //         ], 201);
     //     } catch (\Exception $e) {
     //         return response()->json([
     //             "state" => false,
-    //             "msg" => $e->getMessage()
+    //             "error" => $e->getMessage()
     //         ], 500);
     //     }
     // }
